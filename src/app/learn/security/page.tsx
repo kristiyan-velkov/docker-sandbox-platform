@@ -69,7 +69,7 @@ export default function SecurityPage() {
             <TabsContent value="network" className="mt-6 space-y-4">
               <CommandBlock
                 label="Deny a host"
-                command='sbx policy set-default balanced && sbx policy deny network "api.example.com"'
+                command={'sbx policy init balanced\nsbx policy deny network "api.example.com"'}
               />
               <CommandBlock label="Audit outbound" command="sbx policy log my-sandbox" />
               <DocLink href={sandboxDocs.security}>Network policy docs</DocLink>

@@ -196,16 +196,16 @@ export function LabStepsPanel({
               </span>
             )}
           </div>
-          {steps.map((step) => {
+          {steps.map((step, index) => {
             const { action, expect } = splitStepTask(step.task);
             return (
             <div
-              key={step.label}
+              key={`${index}-${step.label}`}
               className="space-y-3 rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm"
             >
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-wide text-indigo-700">
-                  Step · {step.label}
+                  Step {index + 1} · {step.label}
                 </p>
                 <p className="mt-1.5 text-[14px] leading-relaxed text-slate-700">
                   <span className="font-semibold text-slate-900">Task:</span> {action}

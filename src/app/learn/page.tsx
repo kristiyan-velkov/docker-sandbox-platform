@@ -65,7 +65,7 @@ export default function LearnPage() {
 
         <section className="mt-14">
           <SectionTitle title="Quick start" description="Install, sign in, run your first agent." />
-          <CommandBlock command="brew trust docker/tap && brew install docker/tap/sbx && sbx login && sbx run claude ." />
+          <CommandBlock command={"brew trust docker/tap\nbrew install docker/tap/sbx\nsbx login\nsbx run claude ."} />
           <p className="mt-4 text-[15px] text-muted-foreground">
             Full walkthrough in the{" "}
             <DocLink href={sandboxDocs.getStarted}>get started guide</DocLink> and{" "}

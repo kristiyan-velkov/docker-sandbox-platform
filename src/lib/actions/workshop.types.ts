@@ -25,6 +25,7 @@ export const initialQuestionState: QuestionState = {
 export type LoginState = {
   ok: boolean;
   message: string;
+  redirectTo?: string;
   fieldErrors?: Partial<Record<"email" | "password", string>>;
 };
 

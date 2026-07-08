@@ -288,6 +288,9 @@ export async function loginAttendee(
       };
     }
 
+    // Ensure auth cookies are written before returning to the client.
+    await supabase.auth.getSession();
+
     if (authData.user?.email) {
       await linkLegacySignup(authData.user.id, authData.user.email);
     }
@@ -300,7 +303,11 @@ export async function loginAttendee(
   revalidatePath("/profile");
   revalidatePath("/login");
   revalidatePath("/");
-  redirect(next && next.startsWith("/") ? next : "/profile");
+
+  const redirectTo = next && next.startsWith("/") ? next : "/profile";
+  // Full-page navigation on the client — avoids RSC soft-nav failures and ensures
+  // Set-Cookie from signInWithPassword is applied before the next request.
+  return { ok: true, message: "Signed in.", redirectTo };
 }
 
 export async function submitWorkshopQuestion(

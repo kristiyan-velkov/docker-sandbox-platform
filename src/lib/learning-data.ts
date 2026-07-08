@@ -71,7 +71,11 @@ export const sbxCommandGroups: readonly CommandGroup[] = [
     docsUrl: sandboxDocs.getStarted,
     commands: [
       {
-        command: "brew trust docker/tap && brew install docker/tap/sbx",
+        command: "brew trust docker/tap",
+        summary: "Trust Docker's Homebrew tap on macOS (run once).",
+      },
+      {
+        command: "brew install docker/tap/sbx",
         summary: "Install the sbx CLI on macOS via Homebrew.",
       },
       {
@@ -174,8 +178,8 @@ export const sbxCommandGroups: readonly CommandGroup[] = [
     docsUrl: sandboxDocs.security,
     commands: [
       {
-        command: "sbx policy set-default balanced",
-        summary: "Set the default policy profile (balanced = sensible dev defaults). Run once before first sandbox.",
+        command: "sbx policy init balanced",
+        summary: "Initialize the balanced policy profile (once per machine).",
       },
       {
         command: 'sbx policy deny network "api.example.com"',

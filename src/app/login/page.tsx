@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { AttendeeLoginForm } from "@/components/attendee-login-form";
 import { PageHero, PageShell } from "@/components/page-shell";
 import { SiteFooter } from "@/components/site-footer";
@@ -11,8 +10,19 @@ export const metadata = {
   title: "Log in",
 };
 
-export default async function LoginPage() {
+function loginNextPath(next: string | string[] | undefined) {
+  const value = Array.isArray(next) ? next[0] : next;
+  return value?.startsWith("/") ? value : "/profile";
+}
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string | string[] }>;
+}) {
   const configured = isSupabaseConfigured();
+  const { next: nextParam } = await searchParams;
+  const next = loginNextPath(nextParam);
 
   return (
     <>
@@ -35,17 +45,7 @@ export default async function LoginPage() {
               </CardContent>
             </Card>
           ) : (
-            <Suspense
-              fallback={
-                <Card>
-                  <CardContent className="p-6 text-[15px] text-muted-foreground">
-                    Loading login form…
-                  </CardContent>
-                </Card>
-              }
-            >
-              <AttendeeLoginForm />
-            </Suspense>
+            <AttendeeLoginForm next={next} />
           )}
         </div>
       </PageShell>

@@ -2,8 +2,7 @@
 
 import { Lock, LogIn, Mail } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { FieldError, FormAlert, FormCard } from "@/components/form-fields";
 import { loginAttendee } from "@/lib/actions/workshop";
 import {
@@ -14,18 +13,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-function loginNextPath(searchParams: ReturnType<typeof useSearchParams>) {
-  const next = searchParams.get("next");
-  return next?.startsWith("/") ? next : "/profile";
-}
+type AttendeeLoginFormProps = {
+  next: string;
+};
 
-export function AttendeeLoginForm() {
-  const searchParams = useSearchParams();
-  const next = loginNextPath(searchParams);
+export function AttendeeLoginForm({ next }: AttendeeLoginFormProps) {
   const [state, action, pending] = useActionState<LoginState, FormData>(
     loginAttendee,
     initialLoginState
   );
+
+  useEffect(() => {
+    if (state.ok && state.redirectTo) {
+      window.location.assign(state.redirectTo);
+    }
+  }, [state.ok, state.redirectTo]);
 
   return (
     <FormCard
