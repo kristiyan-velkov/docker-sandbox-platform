@@ -11,7 +11,7 @@ export function QuestionsGate() {
         <LinkButton href="/register" size="lg">
           Register for the workshop
         </LinkButton>
-        <LinkButton href="/login" variant="secondary" size="lg">
+        <LinkButton href="/login" variant="secondary" size="lg" hardNav>
           Log in
         </LinkButton>
       </div>

@@ -93,7 +93,7 @@ export default async function HomePage() {
               <p className="max-w-xl text-[15px] leading-relaxed text-slate-600">
                 Workshop labs are available after you log in with your platform account.
               </p>
-              <LinkButton href="/login?next=/labs" className="mt-6">
+              <LinkButton href="/login?next=/labs" hardNav className="mt-6">
                 <LogIn className="size-4" />
                 Log in to view labs
               </LinkButton>
@@ -125,7 +125,7 @@ export default async function HomePage() {
                 My progress
               </LinkButton>
             ) : (
-              <LinkButton variant="secondary" href="/login?next=/labs">
+              <LinkButton variant="secondary" href="/login?next=/labs" hardNav>
                 <LogIn className="size-4" />
                 Log in
               </LinkButton>

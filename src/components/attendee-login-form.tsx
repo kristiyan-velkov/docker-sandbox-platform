@@ -2,6 +2,7 @@
 
 import { Lock, LogIn, Mail } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useActionState } from "react";
 import { FieldError, FormAlert, FormCard } from "@/components/form-fields";
 import { loginAttendee } from "@/lib/actions/workshop";
@@ -13,7 +14,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function AttendeeLoginForm({ next = "/profile" }: { next?: string }) {
+function loginNextPath(searchParams: ReturnType<typeof useSearchParams>) {
+  const next = searchParams.get("next");
+  return next?.startsWith("/") ? next : "/profile";
+}
+
+export function AttendeeLoginForm() {
+  const searchParams = useSearchParams();
+  const next = loginNextPath(searchParams);
   const [state, action, pending] = useActionState<LoginState, FormData>(
     loginAttendee,
     initialLoginState

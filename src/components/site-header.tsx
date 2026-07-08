@@ -64,7 +64,7 @@ export async function SiteHeader() {
           {session ? (
             <AttendeeNavProfile />
           ) : (
-            <LinkButton href="/login" size="sm" className="ml-1 h-9 px-3">
+            <LinkButton href="/login" size="sm" hardNav className="ml-1 h-9 px-3">
               <LogIn className="size-4" />
               <span className="hidden sm:inline">Log in</span>
             </LinkButton>
