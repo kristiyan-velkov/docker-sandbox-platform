@@ -1,5 +1,6 @@
-import { redirect } from "next/navigation";
+import { ArrowRight } from "lucide-react";
 import { AttendeeLoginForm } from "@/components/attendee-login-form";
+import { LinkButton } from "@/components/link-button";
 import { PageHero, PageShell } from "@/components/page-shell";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -21,10 +22,6 @@ export default async function LoginPage({
   const nextPath = next?.startsWith("/") ? next : "/profile";
 
   const session = await getAttendeeSession();
-  if (session) {
-    redirect(nextPath);
-  }
-
   const configured = isSupabaseConfigured();
 
   return (
@@ -45,6 +42,18 @@ export default async function LoginPage({
               <CardContent className="p-6 text-[15px] text-muted-foreground">
                 Add Supabase keys to <code className="font-mono text-[13px]">.env.local</code> to
                 enable login and registration.
+              </CardContent>
+            </Card>
+          ) : session ? (
+            <Card>
+              <CardContent className="space-y-4 p-6">
+                <p className="text-[15px] text-slate-700">
+                  You&apos;re already signed in as <strong>{session.name}</strong>.
+                </p>
+                <LinkButton href={nextPath}>
+                  Continue
+                  <ArrowRight className="size-4" />
+                </LinkButton>
               </CardContent>
             </Card>
           ) : (

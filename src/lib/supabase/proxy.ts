@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseEnv } from "@/lib/supabase/env";
+import { getSupabaseCookieOptions } from "@/lib/supabase/cookie-options";
 import type { Database } from "@/lib/supabase/types";
 
 export async function updateSession(request: NextRequest) {
@@ -13,6 +14,7 @@ export async function updateSession(request: NextRequest) {
 
   try {
     const supabase = createServerClient<Database>(url, key, {
+      cookieOptions: getSupabaseCookieOptions(),
       cookies: {
         getAll() {
           return request.cookies.getAll();

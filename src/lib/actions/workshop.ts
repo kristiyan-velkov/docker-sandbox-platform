@@ -298,6 +298,7 @@ export async function loginAttendee(
   revalidatePath("/questions");
   revalidatePath("/labs");
   revalidatePath("/profile");
+  revalidatePath("/login");
   revalidatePath("/");
   redirect(next && next.startsWith("/") ? next : "/profile");
 }

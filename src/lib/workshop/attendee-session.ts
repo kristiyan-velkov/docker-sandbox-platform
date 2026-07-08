@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import type { WorkshopSignup } from "@/lib/supabase/types";
 
@@ -87,7 +88,7 @@ export async function getAttendeeSignup(): Promise<WorkshopSignup | null> {
   }
 }
 
-export async function getAttendeeSession(): Promise<AttendeeSession | null> {
+export const getAttendeeSession = cache(async (): Promise<AttendeeSession | null> => {
   if (!isSupabaseConfigured()) return null;
 
   try {
@@ -116,7 +117,7 @@ export async function getAttendeeSession(): Promise<AttendeeSession | null> {
   } catch {
     return null;
   }
-}
+});
 
 export async function clearAttendeeSession() {
   if (!isSupabaseConfigured()) return;
