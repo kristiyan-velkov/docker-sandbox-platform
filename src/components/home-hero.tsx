@@ -35,7 +35,6 @@ export function HomeHero({ isRegistered = false }: HomeHeroProps) {
 
             <p className="mt-7 max-w-xl text-lg leading-relaxed text-slate-500 sm:text-xl">
               Hands-on workshop for running{" "}
-              <strong className="font-semibold text-slate-700">Claude Code</strong> and{" "}
               <strong className="font-semibold text-slate-700">Cursor</strong> agents in isolated
               microVMs with the{" "}
               <strong className="font-semibold text-slate-700">sbx CLI</strong> — YOLO mode without
@@ -85,7 +84,7 @@ export function HomeHero({ isRegistered = false }: HomeHeroProps) {
                 <code>{`$ brew install docker/tap/sbx
 $ sbx login
 $ cd ~/my-project
-$ sbx run claude .
+$ sbx run cursor .
 
 # Agent runs in microVM
 # Host stays untouched ✓`}</code>

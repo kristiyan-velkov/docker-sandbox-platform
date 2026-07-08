@@ -76,14 +76,18 @@ export default function SecurityPage() {
             </TabsContent>
 
             <TabsContent value="secrets" className="mt-6 space-y-4">
-              <CommandBlock label="Store on host (keychain)" command="sbx secret set -g anthropic" />
+              <CommandBlock
+                label="Store on host (keychain)"
+                command='echo "$(gh auth token)" | sbx secret set -g github'
+              />
               <CommandBlock
                 label="Inside VM — sentinel only"
-                command="sbx exec lab3 -- bash -c 'echo $ANTHROPIC_API_KEY'"
+                command="sbx exec lab3 -- bash -c 'echo $GH_TOKEN'"
               />
               <p className="text-[15px] text-muted-foreground">
-                Expected: <InlineCode>proxy-managed</InlineCode>, not your real{" "}
-                <InlineCode>sk-ant-...</InlineCode> key.{" "}
+                Expected: <InlineCode>gho_sbxproxymanaged…</InlineCode> on{" "}
+                <InlineCode>GH_TOKEN</InlineCode> — not your real GitHub token.{" "}
+                <InlineCode>GITHUB_TOKEN</InlineCode> is usually unset.{" "}
                 <DocLink href={sandboxDocs.security}>Credential proxy docs</DocLink>
               </p>
             </TabsContent>
@@ -93,7 +97,7 @@ export default function SecurityPage() {
               <pre className="overflow-x-auto rounded-2xl bg-[#1d1d1f] p-5 font-mono text-[13px] leading-relaxed text-[#f5f5f7]">
                 {`# inside VM
 curl https://blocked.example.com   # BLOCKED
-echo $ANTHROPIC_API_KEY            # placeholder only
+echo $GH_TOKEN                     # gho_sbxproxymanaged… placeholder
 cat /proc/cpuinfo                  # VM, not host`}
               </pre>
             </TabsContent>

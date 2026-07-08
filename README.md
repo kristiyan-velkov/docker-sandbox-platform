@@ -75,11 +75,11 @@ Quick smoke test from this repo root:
 
 ```bash
 sbx login
-sbx secret set -g anthropic   # Claude Code only
+sbx secret set -g cursor      # Cursor API key — run before sbx run cursor
 
 sbx run cursor . --name platform-dev
 # or
-sbx run claude . --name platform-dev
+sbx run cursor . --name platform-dev
 ```
 
 For template + kit setup (network allow-list, `npm ci`, dev server on `:3000`), use the kit from the workshop monorepo:
@@ -139,12 +139,12 @@ Labs, sandbox templates, kits, and the conference landing page are **not** in th
 | [docker-sandbox-workshop](https://github.com/kristiyan-velkov/docker-sandbox-workshop) | Labs 1–10, `customize/`, local `workshop-app/` copy for sbx |
 | `workshop-landing/` (in monorepo) | Conference landing on Zerops — links to this platform |
 
-## Agent rules (Cursor & Claude Code)
+## Agent rules (Cursor & Cursor)
 
 | File | Purpose |
 |------|---------|
 | [AGENTS.md](./AGENTS.md) | Stack, routes, Next.js + Supabase conventions |
-| [CLAUDE.md](./CLAUDE.md) | Claude Code + sbx workflow |
+| [CLAUDE.md](./CLAUDE.md) | Cursor + sbx workflow |
 
 Open this folder as the workspace root in Cursor. Run all npm commands from the repository root.
 

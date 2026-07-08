@@ -46,10 +46,10 @@ export default function YoloPage() {
         </div>
 
         <section className="mt-14">
-          <SectionTitle title="Run Claude in YOLO mode inside sbx" />
-          <CommandBlock command="cd ~/my-project && sbx run claude ." />
+          <SectionTitle title="Run Cursor in YOLO mode inside sbx" />
+          <CommandBlock command="cd ~/my-project && sbx run cursor ." />
           <p className="mt-4 text-[15px] tracking-[-0.022em] text-muted-foreground">
-            Claude Code starts with full tool access inside the VM. Try{" "}
+            Cursor starts with full tool access inside the VM. Try{" "}
             <InlineCode>docker build</InlineCode>, <InlineCode>npm install</InlineCode>, or{" "}
             <InlineCode>curl</InlineCode> — it all stays sandboxed. See{" "}
             <DocLink href={docs.usage}>usage guide</DocLink>.
@@ -58,7 +58,7 @@ export default function YoloPage() {
 
         <section className="mt-14">
           <SectionTitle title="Branch workflow" description="YOLO without touching main." />
-          <CommandBlock command="sbx run --clone claude ~/project --name feature-workshop-demo" />
+          <CommandBlock command="sbx run --clone cursor ~/project --name feature-workshop-demo" />
           <Card className="mt-4">
             <CardContent className="p-6 text-[15px] tracking-[-0.022em] text-muted-foreground">
               The agent works in a git worktree. Your main branch stays clean until you review and

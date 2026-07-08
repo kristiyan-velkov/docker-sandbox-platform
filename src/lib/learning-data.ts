@@ -4,8 +4,18 @@ export const sandboxDocs = {
   usage: "https://docs.docker.com/ai/sandboxes/usage/",
   agents: "https://docs.docker.com/ai/sandboxes/agents/",
   customize: "https://docs.docker.com/ai/sandboxes/customize/",
+  templates: "https://docs.docker.com/ai/sandboxes/customize/templates/",
+  kits: "https://docs.docker.com/ai/sandboxes/customize/kits/",
   architecture: "https://docs.docker.com/ai/sandboxes/architecture/",
   security: "https://docs.docker.com/ai/sandboxes/security/",
+  credentials: "https://docs.docker.com/ai/sandboxes/security/credentials/",
+  governance: "https://docs.docker.com/ai/sandboxes/governance/local/",
+  workflows: "https://docs.docker.com/ai/sandboxes/workflows/",
+  workflowsCloneMode: "https://docs.docker.com/ai/sandboxes/workflows/#clone-mode",
+  workflowsGit: "https://docs.docker.com/ai/sandboxes/workflows/#git-workflows",
+  workflowsAuthCli: "https://docs.docker.com/ai/sandboxes/workflows/#authenticated-cli-tools",
+  workflowsCi: "https://docs.docker.com/ai/sandboxes/workflows/#ci-and-headless-use",
+  cursor: "https://docs.docker.com/ai/sandboxes/agents/cursor/",
   cli: "https://docs.docker.com/reference/cli/sbx/",
   troubleshooting: "https://docs.docker.com/ai/sandboxes/troubleshooting/",
   faq: "https://docs.docker.com/ai/sandboxes/faq/",
@@ -31,7 +41,7 @@ export const sandboxOverview = [
   },
   {
     title: "Agents",
-    body: "Run Claude Code, Cursor, Codex, Copilot, or other supported agents inside a sandbox. The agent gets full tool access within the VM — shell, git, Docker builds — while your laptop stays clean.",
+    body: "Run Cursor, Codex, Copilot, or other supported agents inside a sandbox. The agent gets full tool access within the VM — shell, git, Docker builds — while your laptop stays clean.",
     docsUrl: sandboxDocs.agents,
   },
   {
@@ -91,25 +101,25 @@ export const sbxCommandGroups: readonly CommandGroup[] = [
   {
     id: "run",
     title: "Run & manage sandboxes",
-    description: "Launch Claude Code and control running sandboxes.",
+    description: "Launch Cursor and control running sandboxes.",
     docsUrl: sandboxDocs.usage,
     commands: [
       {
-        command: "sbx run claude .",
-        summary: "Start Claude Code in a sandbox for the current directory.",
+        command: "sbx run cursor .",
+        summary: "Start Cursor in a sandbox for the current directory.",
         docsUrl: sandboxDocs.agents,
       },
       {
-        command: "sbx run claude . --name my-sandbox",
+        command: "sbx run cursor . --name my-sandbox",
         summary: "Give the sandbox a stable name for later exec, stop, or rm.",
       },
       {
-        command: "sbx run --clone claude ~/project --name feature-auth",
+        command: "sbx run --clone cursor ~/project --name feature-auth",
         summary: "Clone mode — agent works on a private Git clone; fetch commits from sandbox-<name> remote.",
         docsUrl: sandboxDocs.usage,
       },
       {
-        command: "sbx run -t lab2-kit:v1 claude . --name lab2-kit",
+        command: "sbx run -t lab2-kit:v1 cursor . --name lab2-kit",
         summary: "Reuse a saved template image (-t) for a custom environment.",
         docsUrl: sandboxDocs.customize,
       },
@@ -152,13 +162,18 @@ export const sbxCommandGroups: readonly CommandGroup[] = [
         summary: "Start Cursor in a sandbox for the current directory.",
       },
       {
-        command: "sbx run cursor workshop-app/ --name workshop-ui",
-        summary: "Named sandbox for the workshop Next.js app.",
+        command: "sbx run cursor . --name platform-dev",
+        summary: "Named sandbox for this platform site (direct mode).",
       },
       {
-        command: "sbx run cursor workshop-app/ --kit ./customize/kit/workshop-app-nextjs --name workshop-ui",
-        summary: "Boot with the workshop kit (deps, rules, env hints).",
+        command: "sbx run cursor . --kit ./labs/customize/kit/workshop-app-nextjs --name platform-dev",
+        summary: "Boot with the workshop kit — local path (deps, dev server, network).",
         docsUrl: sandboxDocs.customize,
+      },
+      {
+        command: 'sbx run cursor . --kit "git+https://github.com/kristiyan-velkov/docker-sandbox-workshop.git#dir=customize/kit/workshop-app-nextjs" --name platform-dev',
+        summary: "Same kit pulled from Git at run time.",
+        docsUrl: sandboxDocs.kits,
       },
       {
         command: "sbx run --clone cursor ~/project --name feature-ui",
@@ -206,15 +221,15 @@ export const sbxCommandGroups: readonly CommandGroup[] = [
     docsUrl: sandboxDocs.security,
     commands: [
       {
-        command: "sbx secret set -g anthropic",
-        summary: "Store an API key in the host keychain (global scope).",
+        command: 'echo "$(gh auth token)" | sbx secret set -g github',
+        summary: "Store a GitHub token in the host keychain (global scope).",
       },
       {
         command: "sbx secret ls",
         summary: "List configured secret providers (not the key values).",
       },
       {
-        command: "sbx secret rm -g anthropic",
+        command: "sbx secret rm -g github",
         summary: "Remove a stored credential from the host.",
       },
     ],

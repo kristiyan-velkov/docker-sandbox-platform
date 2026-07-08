@@ -89,7 +89,7 @@ export function QuestionForm({ attendee, defaultLab = "general" }: QuestionFormP
               name="question"
               rows={4}
               required
-              placeholder="How does credential injection work with Claude Code OAuth?"
+              placeholder="How does credential injection work with Cursor OAuth?"
               className="flex min-h-[120px] w-full resize-y rounded-[10px] border border-border bg-input py-3 pl-11 pr-4 text-[15px] leading-relaxed tracking-[-0.022em] outline-none transition-[border-color,box-shadow] duration-300 placeholder:text-muted-foreground focus-visible:border-primary/60 focus-visible:shadow-[0_0_0_3px_color-mix(in_oklch,var(--primary)_15%,transparent)]"
             />
           </div>

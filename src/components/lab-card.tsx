@@ -30,6 +30,7 @@ import {
 import { cn } from "@/lib/utils";
 
 type LabStep = { label: string; task: string; command: string };
+type LabDocLink = { label: string; href: string };
 
 type LabCardProps = {
   id: WorkshopLabId;
@@ -38,6 +39,7 @@ type LabCardProps = {
   folder: string;
   githubPath: string;
   description: string;
+  docsLinks: readonly LabDocLink[];
   task: string;
   hints: readonly string[];
   steps: readonly LabStep[];
@@ -78,6 +80,7 @@ export function LabCard({
   folder,
   githubPath,
   description,
+  docsLinks,
   task,
   hints,
   steps,
@@ -154,6 +157,14 @@ export function LabCard({
               GUIDE
             </a>
           </Button>
+          {docsLinks.map((doc) => (
+            <Button key={doc.href} variant="outline" size="sm" asChild>
+              <a href={doc.href} target="_blank" rel="noreferrer">
+                {doc.label}
+                <ExternalLink className="size-3 opacity-60" />
+              </a>
+            </Button>
+          ))}
           <Button variant="ghost" size="sm" asChild>
             <Link href={`/questions?lab=${id}`}>
               <MessageCircleQuestion className="size-4" />

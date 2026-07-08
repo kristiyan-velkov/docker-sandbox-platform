@@ -63,7 +63,7 @@ export default async function HomePage() {
             title="Install, authenticate, launch"
             description="Three commands to your first sandbox."
           />
-          <CommandBlock command={"brew trust docker/tap\nbrew install docker/tap/sbx\nsbx login\nsbx run claude ."} />
+          <CommandBlock command={"brew trust docker/tap\nbrew install docker/tap/sbx\nsbx login\nsbx run cursor ."} />
           <p className="mt-4 text-sm text-slate-500">
             <DocLink href={sandboxDocs.getStarted}>Get started guide</DocLink>
             {" · "}

