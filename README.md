@@ -112,9 +112,9 @@ Production build uses Next.js **standalone** output (`next.config.ts`) and runs 
 1. Zerops GUI → **Import a project** → paste [`import.yaml`](./import.yaml)
 2. On the `nextjs` service, connect this **GitHub** repository  
    (`buildFromGit` is omitted — private repos fail at clone time during import)
-3. **Add secrets in the Zerops GUI** (nothing sensitive belongs in git):
-   - `SUPABASE_ANON_KEY` — Supabase Dashboard → Project Settings → API → anon key
-   - `SUPABASE_SERVICE_ROLE_KEY` — optional, for `/admin` dashboard (`is_admin` users)
+3. **Add secrets in the Zerops GUI** — use these **exact names** (not `NEXT_PUBLIC_*`):
+   - **`SUPABASE_ANON_KEY`** — paste the same value as `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` from your `.env.local`
+   - **`SUPABASE_SERVICE_ROLE_KEY`** — optional, for `/admin` dashboard
 4. Push this repo and trigger a deploy
 
 `SUPABASE_URL` is set in `zerops.yaml` (public). Server auth reads `SUPABASE_ANON_KEY` at **runtime** — no rebuild when you rotate the anon key.

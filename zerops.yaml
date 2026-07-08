@@ -56,9 +56,9 @@ zerops:
         # Public URL — hardcoded (never use ${...} here; unresolved refs break Supabase).
         SUPABASE_URL: https://ikagquokcvhbdzmjcdjp.supabase.co
 
-        # ── Set in Zerops GUI → nextjs → Secret Variables (never in git) ───────
-        #   SUPABASE_ANON_KEY            — Supabase anon key (login / register)
-        #   SUPABASE_SERVICE_ROLE_KEY    — optional, /admin dashboard (is_admin users)
+        # Set in Zerops GUI → nextjs → Secret Variables (exact names):
+        #   SUPABASE_ANON_KEY            — same value as publishable/anon key in Supabase
+        #   SUPABASE_SERVICE_ROLE_KEY    — optional, /admin dashboard
 
       # HOSTNAME is set inline to avoid conflicting with the Zerops system
       # variable of the same name. Next.js standalone binds via HOSTNAME;

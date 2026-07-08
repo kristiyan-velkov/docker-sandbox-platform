@@ -17,13 +17,13 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
-  const session = await getAttendeeSession();
-  if (session) {
-    redirect("/profile");
-  }
-
   const { next } = await searchParams;
   const nextPath = next?.startsWith("/") ? next : "/profile";
+
+  const session = await getAttendeeSession();
+  if (session) {
+    redirect(nextPath);
+  }
 
   const configured = isSupabaseConfigured();
 

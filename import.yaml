@@ -36,6 +36,6 @@ services:
       # skips devDependencies (Tailwind/PostCSS) and the build fails on Zerops.
       NEXT_TELEMETRY_DISABLED: "1"
 
-    # After import, add in Zerops GUI → nextjs → Secret Variables:
-    #   SUPABASE_ANON_KEY           — required for login / register
+    # After import, add in Zerops GUI → nextjs → Secret Variables (exact names):
+    #   SUPABASE_ANON_KEY           — same value as Supabase publishable/anon key
     #   SUPABASE_SERVICE_ROLE_KEY   — optional, for /admin dashboard

@@ -10,6 +10,51 @@ export type AttendeeSession = {
   isAdmin: boolean;
 };
 
+async function lookupSignup(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  email: string
+): Promise<WorkshopSignup | null> {
+  const { data: signupByAuth, error: authError } = await supabase
+    .from("workshop_signups")
+    .select(signupSelect)
+    .eq("auth_user_id", userId)
+    .maybeSingle();
+
+  if (!authError && signupByAuth) return signupByAuth;
+
+  const { data: signupByEmail, error: emailError } = await supabase
+    .from("workshop_signups")
+    .select(signupSelect)
+    .ilike("email", email)
+    .maybeSingle();
+
+  if (emailError) return null;
+  return signupByEmail;
+}
+
+async function lookupIsAdmin(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  email: string
+): Promise<boolean> {
+  const { data: byAuth, error: authError } = await supabase
+    .from("workshop_signups")
+    .select("is_admin")
+    .eq("auth_user_id", userId)
+    .maybeSingle();
+
+  if (!authError && byAuth?.is_admin === true) return true;
+
+  const { data: byEmail, error: emailError } = await supabase
+    .from("workshop_signups")
+    .select("is_admin")
+    .ilike("email", email)
+    .maybeSingle();
+
+  return !emailError && byEmail?.is_admin === true;
+}
+
 export async function isWorkshopAdmin(): Promise<boolean> {
   if (!isSupabaseConfigured()) return false;
 
@@ -19,29 +64,8 @@ export async function isWorkshopAdmin(): Promise<boolean> {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) return false;
-
-    if (user.id) {
-      const { data, error } = await supabase
-        .from("workshop_signups")
-        .select("is_admin")
-        .eq("auth_user_id", user.id)
-        .maybeSingle();
-
-      if (!error && data?.is_admin === true) return true;
-    }
-
-    if (user.email) {
-      const { data, error } = await supabase
-        .from("workshop_signups")
-        .select("is_admin")
-        .ilike("email", user.email)
-        .maybeSingle();
-
-      if (!error && data?.is_admin === true) return true;
-    }
-
-    return false;
+    if (!user?.email) return false;
+    return lookupIsAdmin(supabase, user.id, user.email);
   } catch {
     return false;
   }
@@ -56,26 +80,8 @@ export async function getAttendeeSignup(): Promise<WorkshopSignup | null> {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) return null;
-
-    const { data: signupByAuth, error: authError } = await supabase
-      .from("workshop_signups")
-      .select(signupSelect)
-      .eq("auth_user_id", user.id)
-      .maybeSingle();
-
-    if (!authError && signupByAuth) return signupByAuth;
-
-    if (!user.email) return null;
-
-    const { data: signupByEmail, error: emailError } = await supabase
-      .from("workshop_signups")
-      .select(signupSelect)
-      .ilike("email", user.email)
-      .maybeSingle();
-
-    if (emailError) return null;
-    return signupByEmail;
+    if (!user?.email) return null;
+    return lookupSignup(supabase, user.id, user.email);
   } catch {
     return null;
   }
@@ -92,8 +98,10 @@ export async function getAttendeeSession(): Promise<AttendeeSession | null> {
 
     if (!user?.email) return null;
 
-    const signup = await getAttendeeSignup();
-    const isAdmin = await isWorkshopAdmin();
+    const [signup, isAdmin] = await Promise.all([
+      lookupSignup(supabase, user.id, user.email),
+      lookupIsAdmin(supabase, user.id, user.email),
+    ]);
 
     if (signup) {
       return { email: signup.email, name: signup.name, isAdmin };
@@ -112,6 +120,11 @@ export async function getAttendeeSession(): Promise<AttendeeSession | null> {
 
 export async function clearAttendeeSession() {
   if (!isSupabaseConfigured()) return;
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+
+  try {
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+  } catch {
+    // ignore
+  }
 }

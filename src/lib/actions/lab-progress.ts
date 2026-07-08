@@ -99,22 +99,26 @@ export async function getAttendeeLabProgress(): Promise<{
     return { progress: null, configured: true };
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("workshop_lab_progress")
-    .select(
-      "id, signup_id, lab_id, status, started_at, completed_at, duration_seconds, created_at, updated_at"
-    )
-    .eq("signup_id", signup.id);
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("workshop_lab_progress")
+      .select(
+        "id, signup_id, lab_id, status, started_at, completed_at, duration_seconds, created_at, updated_at"
+      )
+      .eq("signup_id", signup.id);
 
-  if (error) {
+    if (error) {
+      return { progress: null, configured: true };
+    }
+
+    return {
+      progress: buildAttendeeProgress(signup, data ?? []),
+      configured: true,
+    };
+  } catch {
     return { progress: null, configured: true };
   }
-
-  return {
-    progress: buildAttendeeProgress(signup, data ?? []),
-    configured: true,
-  };
 }
 
 export async function startLabProgress(
