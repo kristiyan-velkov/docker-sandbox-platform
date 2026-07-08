@@ -113,20 +113,23 @@ Production build uses Next.js **standalone** output (`next.config.ts`) and runs 
 1. Zerops GUI → **Import a project** → paste [`import.yaml`](./import.yaml)
 2. On the `nextjs` service, connect this **GitHub** repository  
    (`buildFromGit` is omitted — private repos fail at clone time during import)
-3. Replace placeholder Supabase keys in **Secret Variables** on the `nextjs` service:
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-4. Note the generated `WORKSHOP_ADMIN_SECRET` (or override it) for `/admin` login
-5. Trigger the first deploy, then **rebuild** after changing any `NEXT_PUBLIC_*` variable (inlined at build time)
+3. **Add secrets in the Zerops GUI** (nothing sensitive belongs in git):
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase Dashboard → Project Settings → API → anon key
+   - `WORKSHOP_ADMIN_SECRET` — auto-generated at import, or set your own for `/admin`
+   - `SUPABASE_SERVICE_ROLE_KEY` — optional, for `/admin` dashboard queries
+4. Push this repo and trigger a deploy
+
+Secrets can be added or rotated in Zerops at any time — the app reads `SUPABASE_*` at **runtime**, so you do not need a rebuild when only secrets change.
 
 ### Environment variables
 
-| Variable | Where | Notes |
-|----------|-------|-------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Env | Public Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Secret | Client + Server Actions |
-| `WORKSHOP_ADMIN_SECRET` | Secret | `/admin` login |
-| `SUPABASE_SERVICE_ROLE_KEY` | Secret | Admin dashboard queries |
+| Variable | Where | In git? | Notes |
+|----------|-------|---------|-------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Service env | Yes (public) | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Zerops Secret | **No** | Login / register |
+| `SUPABASE_URL` / `SUPABASE_ANON_KEY` | Runtime mapping | Names only | Aliases wired in `zerops.yaml` |
+| `WORKSHOP_ADMIN_SECRET` | Zerops Secret | **No** | `/admin` login |
+| `SUPABASE_SERVICE_ROLE_KEY` | Zerops Secret | **No** | Admin dashboard |
 
 Service hostname must be **`nextjs`** — it matches `setup: nextjs` in `zerops.yaml`.
 

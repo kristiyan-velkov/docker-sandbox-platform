@@ -2,8 +2,9 @@
 # yaml-language-server: $schema=https://api.app-prg1.zerops.io/api/rest/public/settings/import-project-yaml-json-schema.json
 #
 # Paste into Zerops → Import a project.
-# buildFromGit is omitted — private repos fail at clone time. After import, connect
-# GitHub on the nextjs service and trigger the first deploy (zerops.yaml is at repo root).
+# No secrets in this file — add them in the Zerops GUI after import (see README).
+# buildFromGit is omitted — private repos fail at clone time. Connect GitHub on the
+# nextjs service, set Secret Variables, then trigger the first deploy.
 
 project:
   name: docker-sandbox-platform
@@ -35,11 +36,5 @@ services:
       # NODE_ENV=production is set at runtime in zerops.yaml — not here, or npm ci
       # skips devDependencies (Tailwind/PostCSS) and the build fails on Zerops.
       NEXT_TELEMETRY_DISABLED: "1"
+      # Public Supabase project URL — safe to commit (same as .env.example).
       NEXT_PUBLIC_SUPABASE_URL: https://ikagquokcvhbdzmjcdjp.supabase.co
-
-    envSecrets:
-      WORKSHOP_ADMIN_SECRET: <@generateRandomString(<32>)>
-
-    dotEnvSecrets: |
-      NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
-      SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
