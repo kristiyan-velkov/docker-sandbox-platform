@@ -1,203 +1,123 @@
 # Docker Sandbox Platform
 
-Next.js app for the **WeAreDevelopers Berlin** workshop — lab progress, registration, login, and Q&A (Supabase). Deploy separately from the monorepo; sbx labs mount [`workshop-app/`](../workshop-app/) (same codebase). Conference landing: [`workshop-landing/`](../workshop-landing/).
+Standalone Next.js app for the **WeAreDevelopers Berlin** Docker Sandboxes workshop — attendee registration, login, lab progress, Q&A, and learning content. Deployed on [Zerops](https://zerops.io); developed locally or inside `sbx` sandboxes during the workshop.
+
+This repository was split out from the [docker-sandbox-workshop](https://github.com/kristiyan-velkov/docker-sandbox-workshop) monorepo so the platform can ship and deploy on its own. The workshop monorepo still holds the hands-on labs, sandbox templates, and kit mixins.
+
+**Git remote:** `git@github-private.com:kristiyan-velkov/docker-sandbox-platform.git`
 
 ## Stack
 
-- Next.js 16 (App Router)
-- Tailwind CSS v4 + Apple design system (tokens in `src/app/globals.css`)
-- Supabase + Server Actions
-- shadcn/ui
-- Lucide icons
+- Next.js 16 (App Router, `output: "standalone"`)
+- Tailwind CSS v4 + Apple design system (`src/app/globals.css`)
+- Supabase + Server Actions + Zod
+- shadcn/ui · Lucide icons
 
 ## Pages
 
 | Route | Content |
 |-------|---------|
-| `/` | Landing, agenda, lab overview |
-| `/labs` | All hands-on labs with commands |
-| `/yolo` | YOLO mode inside sbx |
-| `/security` | Isolation layers, network, secrets |
+| `/` | Landing, quick start, lab overview |
+| `/learn` | Learning hub — YOLO mode, security, commands |
+| `/learn/yolo` | YOLO mode in sbx |
+| `/learn/security` | Isolation layers, network, secrets |
+| `/learn/commands` | sbx CLI reference |
+| `/labs` | Workshop labs (visible when logged in) |
 | `/register` | Workshop signup — Server Actions + Supabase |
+| `/login` | Attendee login |
+| `/profile` | Attendee profile and lab progress |
+| `/questions` | Workshop Q&A |
+| `/about` | Author and conference info |
+| `/admin` | Admin dashboard (requires `WORKSHOP_ADMIN_SECRET`) |
 
-## Supabase setup
+Legacy paths `/yolo` and `/security` redirect to `/learn/*`.
 
-1. Copy the template and add your anon key:
+## Local development
 
 ```bash
+git clone git@github-private.com:kristiyan-velkov/docker-sandbox-platform.git
+cd docker-sandbox-platform
+
 cp .env.example .env.local
-# Edit .env.local — set NEXT_PUBLIC_SUPABASE_ANON_KEY from Supabase dashboard
-```
+# Set NEXT_PUBLIC_SUPABASE_ANON_KEY from the Supabase dashboard
 
-2. Run migration in Supabase SQL editor (or via Supabase MCP):
-
-```
-supabase/migrations/001_workshop_signups.sql
-```
-
-3. Open `/register` and submit the form.
-
-## Run locally (host)
-
-```bash
 npm install
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
----
-
-## Run in Docker Sandbox (template + kit)
-
-The workshop ships a **template** (custom agent image) and a **kit mixin** (npm install, dev server, network allow-list). See [customize/SPEC-REFERENCE.md](../customize/SPEC-REFERENCE.md) for how they fit together.
-
-**Prerequisites**
-
-- [sbx CLI](https://docs.docker.com/ai/sandboxes/get-started/) — `sbx login`
-- Copy `.env.example` → `.env.local` and set `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- **Claude:** `sbx secret set -g anthropic` on the host
-- **Custom template:** Docker Desktop (for `docker build`)
-
-All commands below assume **repo root** unless noted.
-
-### Option A — Kit only (fastest)
-
-Uses the default agent image. The kit runs `npm ci`, starts Next.js on `:3000`, and applies network rules.
+Build and lint before opening a PR:
 
 ```bash
-# Cursor
-sbx run cursor workshop-app/ \
-  --kit ./customize/kit/workshop-app-nextjs \
-  --name workshop-ui
-
-# Claude Code
-sbx run claude workshop-app/ \
-  --kit ./customize/kit/workshop-app-nextjs \
-  --name workshop-ui
+npm run build
+npm run lint
 ```
 
-### Option B — Custom template + kit (workshop default)
+## Supabase setup
 
-Build the template **once** per machine, then stack the kit at create time.
+1. Copy `.env.example` → `.env.local` and set `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+2. Run the migration in the Supabase SQL editor (or via Supabase MCP):
 
-**Cursor**
+   `supabase/migrations/001_workshop_signups.sql`
+
+3. Optional — admin dashboard and server-side queries:
+
+   - `WORKSHOP_ADMIN_SECRET` — `/admin` login
+   - `SUPABASE_SERVICE_ROLE_KEY` — bypasses RLS for admin views
+
+4. Open `/register` and submit the form to verify the Server Action flow.
+
+## Run in Docker Sandbox
+
+During the workshop, attendees edit this app inside an `sbx` microVM. The full lab walkthrough (templates, kits, clone mode) lives in the workshop monorepo — start at [lab-05-workshop-app](https://github.com/kristiyan-velkov/docker-sandbox-workshop/tree/main/lab-05-workshop-app).
+
+Quick smoke test from this repo root:
 
 ```bash
-cd customize/templates/workshop-app-cursor
-docker build -t workshop-app-cursor:v1 .
-docker image save workshop-app-cursor:v1 -o workshop-app-cursor.tar
-sbx template load workshop-app-cursor.tar
-cd ../../..
+sbx login
+sbx secret set -g anthropic   # Claude Code only
 
-sbx run --template workshop-app-cursor:v1 cursor workshop-app/ \
-  --kit ./customize/kit/workshop-app-nextjs \
-  --name workshop-ui
+sbx run cursor . --name platform-dev
+# or
+sbx run claude . --name platform-dev
 ```
 
-**Claude**
+For template + kit setup (network allow-list, `npm ci`, dev server on `:3000`), use the kit from the workshop monorepo:
 
 ```bash
-cd customize/templates/workshop-app-claude
-docker build -t workshop-app-claude:v1 .
-docker image save workshop-app-claude:v1 -o workshop-app-claude.tar
-sbx template load workshop-app-claude.tar
-cd ../../..
-
-sbx run --template workshop-app-claude:v1 claude workshop-app/ \
-  --kit ./customize/kit/workshop-app-nextjs \
-  --name workshop-ui
-```
-
-### Option C — Kit from GitHub (no local customize/ clone)
-
-```bash
-sbx settings set kit.allowedSources '["docker.io/","github.com/kristiyan-velkov/"]'
-
-sbx run cursor workshop-app/ \
+sbx run cursor . \
   --kit "git+https://github.com/kristiyan-velkov/docker-sandbox-workshop.git#dir=customize/kit/workshop-app-nextjs" \
-  --name workshop-ui
+  --name platform-dev
 ```
 
-Pair with a locally built template using `--template workshop-app-cursor:v1` as in option B.
-
-### Option D — Clone mode (isolated Git work)
-
-```bash
-sbx run --template workshop-app-cursor:v1 --clone cursor workshop-app/ \
-  --kit ./customize/kit/workshop-app-nextjs \
-  --name feature/workshop-ui
-```
-
-Agent commits stay on a sandbox remote until you `git fetch sandbox-feature/workshop-ui`.
-
----
-
-## Verify the sandbox
-
-From a **second host terminal** while the agent runs:
+Verify from a second terminal:
 
 ```bash
 sbx ls
-# workshop-ui   cursor|claude   running   …   next-dev :3000
-
-sbx exec workshop-ui -- test -d node_modules && echo "deps OK"
-sbx exec workshop-ui -- curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3000
-# -> 200 or 307
-
-sbx exec workshop-ui -- tail -20 /tmp/next-dev.log
-sbx policy log --limit 10
+sbx exec platform-dev -- curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3000
+sbx rm platform-dev --force
 ```
-
-Open the forwarded port from `sbx ls` in your browser, or use Chrome DevTools MCP from the repo root.
-
-### Clean up
-
-```bash
-sbx rm workshop-ui --force
-```
-
----
-
-## Lab walkthrough
-
-Step-by-step exercises:
-
-| Lab | Topic |
-|-----|--------|
-| [lab-04-clone-workflow](../lab-04-clone-workflow/) | Clone mode — test branch & fetch |
-| [lab-05-workshop-app](../lab-05-workshop-app/) | Template + kit for this app |
-| [lab-06-customize-stack](../lab-06-customize-stack/) | Stack templates, kits, skills |
-| [lab-07-build-component](../lab-07-build-component/) | Agent builds a new component |
-| [lab-08-create-kit](../lab-08-create-kit/) | Create your own kit |
-| [lab-09-use-custom-kit](../lab-09-use-custom-kit/) | Run with your kit |
-| [lab-10-capstone](../lab-10-capstone/) | GitHub + PR workflow |
-
-Each lab: **README.md** (overview) + **GUIDE.md** (commands).
-
-More detail: [customize/README.md](../customize/README.md)
-
----
 
 ## Deploy on Zerops
 
-Next.js **standalone** output (`output: "standalone"` in `next.config.ts`) is built and served with `node server.js` on port 3000.
+Production build uses Next.js **standalone** output (`next.config.ts`) and runs `node server.js` on port 3000.
 
 | File | Purpose |
 |------|---------|
-| [`zerops.yaml`](./zerops.yaml) | Build/deploy/run recipe (app-root layout) |
-| [`import.yaml`](./import.yaml) | One-click project bootstrap |
-| [`../zerops.yaml`](../zerops.yaml) | Monorepo recipe — **use this** when deploying from repo root |
-| [`../import.yaml`](../import.yaml) | Monorepo import — paste into Zerops Import dialog |
+| [`zerops.yaml`](./zerops.yaml) | Build, deploy, and run pipeline |
+| [`import.yaml`](./import.yaml) | One-click project bootstrap — paste into Zerops **Import a project** |
 
 ### Quick import
 
-1. Zerops GUI → **Import a project** → paste [`../import.yaml`](../import.yaml) (monorepo) or [`import.yaml`](./import.yaml) (app-only repo)
-2. Set Supabase keys in **Secret Variables** on the `nextjs` service:
+1. Zerops GUI → **Import a project** → paste [`import.yaml`](./import.yaml)
+2. On the `nextjs` service, connect this **GitHub** repository  
+   (`buildFromGit` is omitted — private repos fail at clone time during import)
+3. Replace placeholder Supabase keys in **Secret Variables** on the `nextjs` service:
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
-3. Note the generated `WORKSHOP_ADMIN_SECRET` (or override it) for `/admin` login
-4. Rebuild after changing any `NEXT_PUBLIC_*` variable (inlined at build time)
+4. Note the generated `WORKSHOP_ADMIN_SECRET` (or override it) for `/admin` login
+5. Trigger the first deploy, then **rebuild** after changing any `NEXT_PUBLIC_*` variable (inlined at build time)
 
 ### Environment variables
 
@@ -210,20 +130,24 @@ Next.js **standalone** output (`output: "standalone"` in `next.config.ts`) is bu
 
 Service hostname must be **`nextjs`** — it matches `setup: nextjs` in `zerops.yaml`.
 
+## Workshop monorepo
+
+Labs, sandbox templates, kits, and the conference landing page are **not** in this repo:
+
+| Repo / path | Purpose |
+|-------------|---------|
+| [docker-sandbox-workshop](https://github.com/kristiyan-velkov/docker-sandbox-workshop) | Labs 1–10, `customize/`, local `workshop-app/` copy for sbx |
+| `workshop-landing/` (in monorepo) | Conference landing on Zerops — links to this platform |
+
 ## Agent rules (Cursor & Claude Code)
 
 | File | Purpose |
 |------|---------|
 | [AGENTS.md](./AGENTS.md) | Stack, routes, Next.js + Supabase conventions |
 | [CLAUDE.md](./CLAUDE.md) | Claude Code + sbx workflow |
-| [.cursor/rules/](./.cursor/rules/) | Cursor project rules (auto-applied) |
 
-Open this folder as the workspace root in Cursor for project-scoped rules, or work from repo root — rules match `src/**` paths.
+Open this folder as the workspace root in Cursor. Run all npm commands from the repository root.
 
 ## Edit content
 
-Workshop copy and lab commands: `src/lib/workshop-data.ts`
-
-## MCP (repo root)
-
-See `../.cursor/mcp.json` — Chrome DevTools and Supabase MCP configured at repo root.
+Workshop copy and static data: `src/lib/workshop-data.ts`, `src/lib/learning-data.ts`, `src/lib/labs.ts`
