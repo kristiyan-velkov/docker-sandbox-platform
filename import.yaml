@@ -32,7 +32,8 @@ services:
       maxCpu: 2
 
     envVariables:
-      NODE_ENV: production
+      # NODE_ENV=production is set at runtime in zerops.yaml — not here, or npm ci
+      # skips devDependencies (Tailwind/PostCSS) and the build fails on Zerops.
       NEXT_TELEMETRY_DISABLED: "1"
       NEXT_PUBLIC_SUPABASE_URL: https://ikagquokcvhbdzmjcdjp.supabase.co
 

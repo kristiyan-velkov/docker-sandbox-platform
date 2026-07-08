@@ -14,11 +14,10 @@ zerops:
       base: ubuntu/nodejs@22
 
       buildCommands:
-        # Reproducible install — npm ci reads exactly what is in package-lock.json.
-        # devDependencies are required by `next build` (TypeScript, PostCSS, Tailwind).
-        # The standalone output in .next/standalone only ships the runtime subset.
-        - npm ci
-        - npm run build
+        # --include=dev is required: service/import set NODE_ENV=production, and npm ci
+        # omits devDependencies in production (Tailwind, PostCSS, TypeScript).
+        - npm ci --include=dev
+        - NODE_ENV=production npm run build
         # Standalone output omits static assets; copy them into the bundle
         # so the deploy directory is fully self-contained.
         - cp -r .next/static  .next/standalone/.next/static
@@ -33,7 +32,6 @@ zerops:
 
       # NEXT_PUBLIC_* are inlined at build time — must be set before `npm run build`.
       envVariables:
-        NODE_ENV: production
         NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
 
