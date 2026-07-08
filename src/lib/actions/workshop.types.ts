@@ -38,13 +38,3 @@ export type UnlockState = LoginState;
 
 /** @deprecated use initialLoginState */
 export const initialUnlockState = initialLoginState;
-
-export type AdminLoginState = {
-  ok: boolean;
-  message: string;
-};
-
-export const initialAdminLoginState: AdminLoginState = {
-  ok: false,
-  message: "",
-};

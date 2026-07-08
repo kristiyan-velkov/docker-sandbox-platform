@@ -28,7 +28,7 @@ This repository was split out from the [docker-sandbox-workshop](https://github.
 | `/profile` | Attendee profile and lab progress |
 | `/questions` | Workshop Q&A |
 | `/about` | Author and conference info |
-| `/admin` | Admin dashboard (requires `WORKSHOP_ADMIN_SECRET`) |
+| `/admin` | Admin dashboard (requires `is_admin` on signup + optional service role key) |
 
 Legacy paths `/yolo` and `/security` redirect to `/learn/*`.
 
@@ -61,10 +61,9 @@ npm run lint
 
    `supabase/migrations/001_workshop_signups.sql`
 
-3. Optional — admin dashboard and server-side queries:
+3. Optional — `/admin` dashboard (users with `is_admin` in Supabase):
 
-   - `WORKSHOP_ADMIN_SECRET` — `/admin` login
-   - `SUPABASE_SERVICE_ROLE_KEY` — bypasses RLS for admin views
+   - `SUPABASE_SERVICE_ROLE_KEY` — server-side queries for admin views
 
 4. Open `/register` and submit the form to verify the Server Action flow.
 
@@ -114,22 +113,20 @@ Production build uses Next.js **standalone** output (`next.config.ts`) and runs 
 2. On the `nextjs` service, connect this **GitHub** repository  
    (`buildFromGit` is omitted — private repos fail at clone time during import)
 3. **Add secrets in the Zerops GUI** (nothing sensitive belongs in git):
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase Dashboard → Project Settings → API → anon key
-   - `WORKSHOP_ADMIN_SECRET` — auto-generated at import, or set your own for `/admin`
-   - `SUPABASE_SERVICE_ROLE_KEY` — optional, for `/admin` dashboard queries
+   - `SUPABASE_ANON_KEY` — Supabase Dashboard → Project Settings → API → anon key
+   - `SUPABASE_SERVICE_ROLE_KEY` — optional, for `/admin` dashboard (`is_admin` users)
 4. Push this repo and trigger a deploy
 
-Secrets can be added or rotated in Zerops at any time — the app reads `SUPABASE_*` at **runtime**, so you do not need a rebuild when only secrets change.
+`SUPABASE_URL` is set in `zerops.yaml` (public). Server auth reads `SUPABASE_ANON_KEY` at **runtime** — no rebuild when you rotate the anon key.
 
 ### Environment variables
 
 | Variable | Where | In git? | Notes |
 |----------|-------|---------|-------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Service env | Yes (public) | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Zerops Secret | **No** | Login / register |
-| `SUPABASE_URL` / `SUPABASE_ANON_KEY` | Runtime mapping | Names only | Aliases wired in `zerops.yaml` |
-| `WORKSHOP_ADMIN_SECRET` | Zerops Secret | **No** | `/admin` login |
+| `SUPABASE_URL` | `zerops.yaml` run env | Yes (public) | Supabase project URL |
+| `SUPABASE_ANON_KEY` | Zerops Secret | **No** | Login / register |
 | `SUPABASE_SERVICE_ROLE_KEY` | Zerops Secret | **No** | Admin dashboard |
+| `NEXT_PUBLIC_SUPABASE_*` | `.env.local` only | **No** | Local dev fallback |
 
 Service hostname must be **`nextjs`** — it matches `setup: nextjs` in `zerops.yaml`.
 

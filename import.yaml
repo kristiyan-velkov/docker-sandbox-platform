@@ -1,4 +1,3 @@
-#yamlPreprocessor=on
 # yaml-language-server: $schema=https://api.app-prg1.zerops.io/api/rest/public/settings/import-project-yaml-json-schema.json
 #
 # Paste into Zerops → Import a project.
@@ -36,5 +35,7 @@ services:
       # NODE_ENV=production is set at runtime in zerops.yaml — not here, or npm ci
       # skips devDependencies (Tailwind/PostCSS) and the build fails on Zerops.
       NEXT_TELEMETRY_DISABLED: "1"
-      # Public Supabase project URL — safe to commit (same as .env.example).
-      NEXT_PUBLIC_SUPABASE_URL: https://ikagquokcvhbdzmjcdjp.supabase.co
+
+    # After import, add in Zerops GUI → nextjs → Secret Variables:
+    #   SUPABASE_ANON_KEY           — required for login / register
+    #   SUPABASE_SERVICE_ROLE_KEY   — optional, for /admin dashboard

@@ -53,14 +53,12 @@ zerops:
         PORT: "3000"
         NEXT_TELEMETRY_DISABLED: "1"
 
-        # ── Supabase (server — read at runtime; values from Zerops Secret Variables) ─
-        SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
-        SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        # Public URL — hardcoded (never use ${...} here; unresolved refs break Supabase).
+        SUPABASE_URL: https://ikagquokcvhbdzmjcdjp.supabase.co
 
         # ── Set in Zerops GUI → nextjs → Secret Variables (never in git) ───────
-        #   NEXT_PUBLIC_SUPABASE_ANON_KEY  — Supabase anon key (login / register)
-        #   SUPABASE_SERVICE_ROLE_KEY      — optional, /admin dashboard
-        #   WORKSHOP_ADMIN_SECRET          — /admin login (or auto-generated at import)
+        #   SUPABASE_ANON_KEY            — Supabase anon key (login / register)
+        #   SUPABASE_SERVICE_ROLE_KEY    — optional, /admin dashboard (is_admin users)
 
       # HOSTNAME is set inline to avoid conflicting with the Zerops system
       # variable of the same name. Next.js standalone binds via HOSTNAME;

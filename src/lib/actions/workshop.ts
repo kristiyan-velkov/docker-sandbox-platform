@@ -3,13 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import {
-  clearAdminSession,
-  isAdminSecretConfigured,
-  setAdminSession,
-} from "@/lib/admin/auth";
 import type {
-  AdminLoginState,
   LoginState,
   QuestionState,
   RegisterState,
@@ -376,30 +370,6 @@ export async function submitWorkshopQuestion(
   }
 }
 
-export async function loginAdmin(
-  _prevState: AdminLoginState,
-  formData: FormData
-): Promise<AdminLoginState> {
-  const secret = process.env.WORKSHOP_ADMIN_SECRET;
-  const password = formData.get("password")?.toString() ?? "";
-
-  if (!secret) {
-    return { ok: false, message: "Admin not configured. Set WORKSHOP_ADMIN_SECRET." };
-  }
-
-  if (password !== secret) {
-    return { ok: false, message: "Invalid password." };
-  }
-
-  await setAdminSession(secret);
-  redirect("/admin");
-}
-
-export async function logoutAdmin() {
-  await clearAdminSession();
-  redirect("/admin/login");
-}
-
 export async function signOutAttendee() {
   await clearAttendeeSession();
   revalidatePath("/", "layout");
@@ -503,5 +473,3 @@ function emptyQuestionsByLab(): Record<LabQuestionId, WorkshopQuestion[]> {
   }
   return result;
 }
-
-export { isAdminSecretConfigured };
