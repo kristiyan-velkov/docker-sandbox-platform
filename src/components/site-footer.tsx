@@ -22,17 +22,17 @@ export async function SiteFooter() {
                   Docker Sandbox Workshop
                 </p>
                 <p className="text-sm text-slate-400">
-                  {workshop.event} · {workshop.location}
+                  Hands-on workshop platform
                 </p>
               </div>
             </div>
             <p className="mb-6 max-w-md text-sm leading-relaxed text-slate-500">
-              Hands-on WeAreDevelopers Berlin workshop — run AI coding agents
-              safely in isolated microVMs with the sbx CLI. Register, complete
-              the labs, and ask questions tagged by lab.
+              Run AI coding agents safely in isolated microVMs with the sbx CLI.
+              Register, complete the labs, and ask questions tagged by lab.
             </p>
             <div className="flex flex-wrap gap-2">
               <FooterLink href="/learn">Learn</FooterLink>
+              <FooterLink href="/resources">Resources</FooterLink>
               {session ? <FooterLink href="/labs">Labs</FooterLink> : null}
               <FooterLink href={workshop.githubRepoUrl} external>
                 <FolderGit className="size-3.5" />

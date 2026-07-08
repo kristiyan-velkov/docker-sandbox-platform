@@ -82,17 +82,16 @@ export function LabTrackerActions({
             <input type="hidden" name="lab_id" value={labId} />
             <Button
               type="submit"
-              size="sm"
-              variant="outline"
+              size={compact ? "sm" : "default"}
               disabled={disabled || pending}
-              className="border-emerald-500/50 text-emerald-800 hover:bg-emerald-50"
+              className="bg-emerald-600 text-white shadow-lg shadow-emerald-200/80 ring-2 ring-emerald-400/40 hover:bg-emerald-700 hover:shadow-emerald-300/80 focus-visible:ring-emerald-500"
             >
               {completePending ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
                 <CheckCircle2 className="size-4" />
               )}
-              Complete
+              Mark complete
             </Button>
           </form>
         )}
@@ -109,8 +108,8 @@ export function LabTrackerActions({
           Complete Lab {labNumber(activeLabId)} first
         </p>
       ) : isInProgress ? (
-        <p className="text-[12px] font-medium text-amber-800">
-          Timer running for Lab {labNumber(labId)}
+        <p className="text-[12px] font-medium text-emerald-800">
+          Done? Hit <strong>Mark complete</strong> to save your time.
         </p>
       ) : null}
     </div>

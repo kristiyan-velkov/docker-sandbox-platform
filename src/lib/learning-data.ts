@@ -51,8 +51,8 @@ export const sandboxOverview = [
   },
   {
     title: "Templates & kits",
-    body: "Save a configured sandbox as a template (sbx template save) and reuse it with -t, or extend agents at runtime with --kit (experimental).",
-    docsUrl: sandboxDocs.customize,
+    body: "Templates snapshot a whole sandbox image (sbx template save, -t). Kits are lighter: a spec.yaml + files/ folder passed with --kit. A mixin kit extends an existing agent — network rules, startup scripts (npm ci + dev server), and workspace files (skills, rules) without rebuilding the image.",
+    docsUrl: sandboxDocs.kits,
   },
   {
     title: "Network & secrets",
@@ -162,17 +162,17 @@ export const sbxCommandGroups: readonly CommandGroup[] = [
         summary: "Start Cursor in a sandbox for the current directory.",
       },
       {
-        command: "sbx run cursor . --name platform-dev",
-        summary: "Named sandbox for this platform site (direct mode).",
+        command: "sbx run cursor workshop-app/ --name platform-dev",
+        summary: "Named sandbox for workshop-app (direct mode).",
       },
       {
-        command: "sbx run cursor . --kit ./labs/customize/kit/workshop-app-nextjs --name platform-dev",
-        summary: "Boot with the workshop kit — local path (deps, dev server, network).",
+        command: "cd workshop-app && sbx run cursor . --kit ../customize/kit/workshop-app-nextjs --name platform-dev",
+        summary: "Boot workshop-app with kit — local path (deps, dev server, Cursor rules).",
         docsUrl: sandboxDocs.customize,
       },
       {
-        command: 'sbx run cursor . --kit "git+https://github.com/kristiyan-velkov/docker-sandbox-workshop.git#dir=customize/kit/workshop-app-nextjs" --name platform-dev',
-        summary: "Same kit pulled from Git at run time.",
+        command: 'cd workshop-app && sbx run cursor . --kit "git+https://github.com/kristiyan-velkov/docker-sandbox-workshop.git#dir=customize/kit/workshop-app-nextjs" --name platform-dev',
+        summary: "Same kit pulled from Git — run from inside workshop-app/.",
         docsUrl: sandboxDocs.kits,
       },
       {

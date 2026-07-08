@@ -128,11 +128,11 @@ export function LabCompletedButton({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex h-8 items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-50 px-3 text-[13px] font-semibold text-emerald-800",
+        "inline-flex h-11 items-center gap-2 rounded-xl border border-emerald-500/50 bg-emerald-600 px-4 text-sm font-semibold text-white shadow-md shadow-emerald-200/60",
         className
       )}
     >
-      <CheckCircle2 className="size-4 text-emerald-600" />
+      <CheckCircle2 className="size-4" />
       Completed
     </span>
   );

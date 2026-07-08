@@ -18,7 +18,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Docker Sandbox Platform | WeAreDevelopers Berlin",
+    default: "Docker Sandbox Platform",
     template: "%s | Docker Sandbox Platform",
   },
   description:

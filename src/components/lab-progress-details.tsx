@@ -30,7 +30,7 @@ export function LabProgressDetails({ progress, showTracker = true }: LabProgress
       <CardHeader>
         <CardTitle>Lab breakdown</CardTitle>
         <CardDescription>
-          Press <strong>Play</strong> when you start a lab and <strong>Complete</strong> when you
+          Press <strong>Play</strong> when you start a lab and <strong>Mark complete</strong> when you
           finish. Only one lab can run at a time.
         </CardDescription>
       </CardHeader>

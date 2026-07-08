@@ -1,6 +1,6 @@
 # Docker Sandbox Platform
 
-Standalone Next.js app for the **WeAreDevelopers Berlin** Docker Sandboxes workshop — attendee registration, login, lab progress, Q&A, and learning content. Deployed on [Zerops](https://zerops.io); developed locally or inside `sbx` sandboxes during the workshop.
+Standalone Next.js app for the **Docker Sandboxes** hands-on workshop — attendee registration, login, lab progress, Q&A, and learning content. Deployed on [Zerops](https://zerops.io); developed locally or inside `sbx` sandboxes during the workshop.
 
 This repository was split out from the [docker-sandbox-workshop](https://github.com/kristiyan-velkov/docker-sandbox-workshop) monorepo so the platform can ship and deploy on its own. The workshop monorepo still holds the hands-on labs, sandbox templates, and kit mixins.
 
@@ -19,6 +19,7 @@ This repository was split out from the [docker-sandbox-workshop](https://github.
 |-------|---------|
 | `/` | Landing, quick start, lab overview |
 | `/learn` | Learning hub — YOLO mode, security, commands |
+| `/resources` | Useful links — security workshop, Dockerfiles, blog, social |
 | `/learn/yolo` | YOLO mode in sbx |
 | `/learn/security` | Isolation layers, network, secrets |
 | `/learn/commands` | sbx CLI reference |
@@ -69,7 +70,7 @@ npm run lint
 
 ## Run in Docker Sandbox
 
-During the workshop, attendees edit this app inside an `sbx` microVM. The full lab walkthrough (templates, kits, clone mode) lives in the workshop monorepo — start at [lab-05-workshop-app](https://github.com/kristiyan-velkov/docker-sandbox-workshop/tree/main/lab-05-workshop-app).
+During the workshop, attendees work through **six labs** in the [docker-sandbox-workshop](https://github.com/kristiyan-velkov/docker-sandbox-workshop) monorepo — from first sandbox through clone mode, pre-built kit (Lab 5), and creating a custom kit (Lab 6). Start at [lab-05-workshop-app](https://github.com/kristiyan-velkov/docker-sandbox-workshop/tree/main/lab-05-workshop-app) for kit setup or [lab-06-customize-stack](https://github.com/kristiyan-velkov/docker-sandbox-workshop/tree/main/lab-06-customize-stack) for the final custom-kit lab.
 
 Quick smoke test from this repo root:
 
@@ -82,9 +83,19 @@ sbx run cursor . --name platform-dev
 sbx run cursor . --name platform-dev
 ```
 
-For template + kit setup (network allow-list, `npm ci`, dev server on `:3000`), use the kit from the workshop monorepo:
+For template + kit setup (network allow-list, `npm ci`, dev server on `:3000`), use the kit from the workshop monorepo — **from inside `workshop-app/`**:
 
 ```bash
+cd workshop-app
+sbx run cursor . \
+  --kit ../customize/kit/workshop-app-nextjs \
+  --name platform-dev
+```
+
+Or pull the kit from Git:
+
+```bash
+cd workshop-app
 sbx run cursor . \
   --kit "git+https://github.com/kristiyan-velkov/docker-sandbox-workshop.git#dir=customize/kit/workshop-app-nextjs" \
   --name platform-dev

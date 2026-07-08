@@ -26,7 +26,7 @@ export default async function RegisterPage() {
       <PageShell
         hero={
           <PageHero
-            eyebrow={<Badge variant="secondary">WeAreDevelopers Berlin</Badge>}
+            eyebrow={<Badge variant="secondary">Docker Sandboxes</Badge>}
             title="Workshop registration"
             description="Create an account with email and password. Registration unlocks lab progress tracking and Q&A."
           />

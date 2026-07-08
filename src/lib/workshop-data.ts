@@ -3,9 +3,7 @@ import { sandboxDocs } from "@/lib/learning-data";
 
 export const workshop = {
   title: "Run AI Agents Safely with Docker Sandboxes",
-  event: "WeAreDevelopers World Congress",
-  location: "Berlin",
-  duration: "10 hands-on labs",
+  duration: "6 hands-on labs",
   docsUrl: "https://docs.docker.com/ai/sandboxes/",
   githubRepoUrl: "https://github.com/kristiyan-velkov/docker-sandbox-workshop",
 } as const;
@@ -37,7 +35,7 @@ export const agenda = [
   },
   {
     time: "1:35",
-    title: "Labs 4–10 — self-paced (clone, app, kits, capstone)",
+    title: "Labs 4–6 — self-paced (clone, kit, custom kit)",
     duration: "25+ min",
   },
   { time: "1:50", title: "Q&A", duration: "10 min" },
@@ -303,60 +301,56 @@ Done when GH_TOKEN shows a proxy sentinel (gho_sbxproxymanaged…), the GitHub A
   {
     id: "lab-04",
     title: "Direct & Clone Mode",
-    time: "15 min",
+    time: "25 min",
     folder: "lab-04-clone-workflow",
     githubPath: "lab-04-clone-workflow",
     description:
-      "Clone the workshop repo, validate workshop-app locally, then compare direct and clone mode in sbx.",
+      "Compare direct mode (host edits immediately) vs clone mode (isolated Git in the VM), then bring agent work back to main.",
     docsLinks: [
       { label: "Workflow patterns", href: sandboxDocs.workflows },
       { label: "Clone mode", href: sandboxDocs.workflowsCloneMode },
       { label: "Git workflows", href: sandboxDocs.workflowsGit },
     ],
-    task: `1. Clone https://github.com/kristiyan-velkov/docker-sandbox-workshop and cd into workshop-app/.
-2. Run npm install and npm run dev on the host — confirm http://localhost:3000 loads, then stop the dev server.
-3. From the workshop monorepo root, start Cursor in direct mode: sbx run cursor workshop-app/ --name lab4-direct.
-4. Ask the agent to change the landing hero tagline in src/components/home-hero.tsx. Confirm the edit appears on the host immediately.
-5. Remove lab4-direct with sbx rm.
-6. Start Cursor in clone mode: sbx run --clone cursor workshop-app/ --name lab4-clone.
-7. Ask the agent to create branch feat/lab4-test, add a one-line comment to src/lib/workshop-data.ts, and commit.
-8. On the host (monorepo root), run git fetch sandbox-lab4-clone and review the diff — expect git status to stay clean.
-9. Remove lab4-clone and the sandbox remote.
+    task: `1. Clone https://github.com/kristiyan-velkov/docker-sandbox-workshop, cd workshop-app/, npm install && npm run dev — confirm http://localhost:3000, Ctrl+C, cd ..
+2. From repo root: sbx run cursor workshop-app/ --name lab4-direct.
+3. Ask the agent to update the hero tagline in src/components/home-hero.tsx — expect the edit on the host immediately (no fetch).
+4. sbx rm lab4-direct --force.
+5. From repo root: sbx run --clone cursor . --name lab4-clone (--clone requires the Git repo root, not workshop-app/).
+6. Ask the agent to create feat/lab4-test, add a one-line comment to workshop-app/src/lib/workshop-data.ts, and commit docs: clone mode test.
+7. git fetch sandbox-lab4-clone, review diff — git status on main stays clean.
+8. git checkout -b feat/lab4-test sandbox-lab4-clone/feat/lab4-test, git push -u origin feat/lab4-test, merge into main (PR or local merge).
+9. sbx rm lab4-clone --force and git remote remove sandbox-lab4-clone.
 
-Done when the app runs locally on the host, direct-mode edits show on the host right away, clone-mode commits appear only after git fetch sandbox-lab4-clone, and your host working tree stayed clean during clone mode.`,
+Done when direct-mode hero edit is visible without fetch, host main never dirtied during clone mode, agent commit is on origin/feat/lab4-test and merged into main.`,
     hints: [
       "Clone the workshop repo first: git clone https://github.com/kristiyan-velkov/docker-sandbox-workshop",
-      "Validate on the host before sbx — cd workshop-app, npm install, npm run dev, open http://localhost:3000.",
-      "Run sbx commands from the monorepo root with workshop-app/ as the workspace path.",
-      "Direct mode (default) — read-write access to your working tree. Agent changes appear on the host immediately.",
-      "Clone mode (--clone) — private Git clone in the VM; host repo mounted read-only. Fetch commits from sandbox-<name> like any remote.",
+      "Validate on the host — cd workshop-app, npm install, npm run dev, open http://localhost:3000, then cd .. to repo root.",
+      "All sbx commands run from the monorepo root — direct mode uses workshop-app/ as workspace; clone mode uses . (Git repo root).",
+      "--clone on workshop-app/ fails — workshop-app/ is not a Git root. Use sbx run --clone cursor . from repo root.",
+      "Direct mode (default) — read-write mount; agent edits appear on the host immediately.",
+      "Clone mode (--clone) — private Git clone in the VM; host main stays clean until git fetch sandbox-<name>.",
       "Clone mode is set at create time only — you cannot add --clone to an existing sandbox.",
       "No kit or Supabase setup needed for this lab.",
       "After clone mode, the remote is sandbox-lab4-clone (pattern: sandbox-<your --name>).",
-      'Agent prompt (direct): "Update the hero tagline in src/components/home-hero.tsx to mention Docker Sandboxes."',
-      'Agent prompt (clone): "Create branch feat/lab4-test, add a one-line comment at the top of src/lib/workshop-data.ts, commit, and tell me the branch name."',
+      'Agent prompt (direct): "Update the hero tagline in src/components/home-hero.tsx to mention Docker Sandboxes. Show me the new line."',
+      'Agent prompt (clone): "Create branch feat/lab4-test. Add a one-line comment at the top of workshop-app/src/lib/workshop-data.ts noting this was edited in clone mode. Commit with message docs: clone mode test."',
+      "Merge: open a PR on GitHub, or git checkout main && git merge feat/lab4-test && git push origin main.",
     ],
     steps: [
       {
-        label: "Clone workshop repo",
-        task: "Download the workshop monorepo from GitHub. You will work inside workshop-app/ for local validation and sandbox runs.",
+        label: "Setup (host)",
+        task: "Clone the workshop monorepo, validate workshop-app locally, then return to the repo root for all sbx commands.",
         command:
-          "git clone https://github.com/kristiyan-velkov/docker-sandbox-workshop.git\ncd docker-sandbox-workshop",
-      },
-      {
-        label: "Validate locally",
-        task: "Install dependencies and start the dev server on the host. Open http://localhost:3000 — expect the site to load. Stop the server (Ctrl+C) before starting sbx.",
-        command:
-          "cd workshop-app\nnpm install\nnpm run dev\n\n# Confirm http://localhost:3000 in your browser, then Ctrl+C",
+          "git clone https://github.com/kristiyan-velkov/docker-sandbox-workshop.git\ncd docker-sandbox-workshop/workshop-app\nnpm install && npm run dev\n# confirm http://localhost:3000, Ctrl+C\ncd ..",
       },
       {
         label: "Direct mode",
-        task: "From the monorepo root, boot Cursor on workshop-app/ without --clone. The sandbox mounts your working tree read-write — edits sync to the host immediately.",
-        command: "cd ..\nsbx run cursor workshop-app/ --name lab4-direct",
+        task: "From repo root, start Cursor on workshop-app/ — no --clone. The sandbox mounts your working tree read-write; edits sync to the host immediately.",
+        command: "sbx run cursor workshop-app/ --name lab4-direct",
       },
       {
         label: "Edit on host",
-        task: "In Cursor, ask the agent to update the hero tagline in src/components/home-hero.tsx. Open the file on the host — the change should already be there before you fetch anything.",
+        task: "Ask the agent to update the hero tagline. Open src/components/home-hero.tsx on the host — the change should already be there (no fetch needed).",
         command:
           "# Cursor prompt:\nUpdate the hero tagline in src/components/home-hero.tsx to mention Docker Sandboxes. Show me the new line.",
       },
@@ -367,24 +361,30 @@ Done when the app runs locally on the host, direct-mode edits show on the host r
       },
       {
         label: "Clone mode",
-        task: "From the monorepo root, start a new sandbox with --clone on workshop-app/. The agent gets a private Git clone; your host working tree stays read-only and untouched.",
-        command: "sbx run --clone cursor workshop-app/ --name lab4-clone",
+        task: "From repo root, start a new sandbox with --clone on . (Git repo root). The agent gets a private clone of the whole monorepo; your host main stays read-only and untouched.",
+        command: "sbx run --clone cursor . --name lab4-clone",
       },
       {
         label: "Agent commits",
-        task: "Ask the agent to branch, edit, and commit inside the VM clone. Host git status should remain clean while the agent works.",
+        task: "Ask the agent to branch, edit workshop-app/src/lib/workshop-data.ts, and commit inside the VM clone. git status on host main should remain clean.",
         command:
-          '# Cursor prompt:\nCreate branch feat/lab4-test. Add a one-line comment at the top of src/lib/workshop-data.ts noting this was edited in clone mode. Commit with message "docs: clone mode test".',
+          '# Cursor prompt:\nCreate branch feat/lab4-test. Add a one-line comment at the top of workshop-app/src/lib/workshop-data.ts noting this was edited in clone mode. Commit with message "docs: clone mode test".',
       },
       {
-        label: "Fetch on host",
-        task: "On the host (monorepo root): fetch the sandbox clone and review before merging. Expect refs under sandbox-lab4-clone/.",
+        label: "Fetch & review",
+        task: "Fetch the sandbox clone and review before merging. Expect refs under sandbox-lab4-clone/.",
         command:
           "git fetch sandbox-lab4-clone\ngit log sandbox-lab4-clone/feat/lab4-test --oneline -3\ngit diff main..sandbox-lab4-clone/feat/lab4-test\ngit status",
       },
       {
+        label: "Push & merge",
+        task: "Check out the agent branch, push to origin, and merge into main — via PR on GitHub or a local merge.",
+        command:
+          "git checkout -b feat/lab4-test sandbox-lab4-clone/feat/lab4-test\ngit push -u origin feat/lab4-test\n# PR: GitHub → merge PR → git checkout main && git pull origin main\n# Local: git checkout main && git merge feat/lab4-test && git push origin main",
+      },
+      {
         label: "Clean up clone",
-        task: "Remove the clone-mode sandbox and optional Git remote when review is done.",
+        task: "Remove the clone-mode sandbox and sandbox Git remote when review is done.",
         command:
           "sbx rm lab4-clone --force\ngit remote remove sandbox-lab4-clone 2>/dev/null || true",
       },
@@ -393,291 +393,165 @@ Done when the app runs locally on the host, direct-mode edits show on the host r
   {
     id: "lab-05",
     title: "Run with Kit",
-    time: "20 min",
+    time: "15 min",
     folder: "lab-05-workshop-app",
     githubPath: "lab-05-workshop-app",
     description:
-      "Boot the platform site with a kit mixin — local path first, then the same kit from a Git URL.",
+      "Boot workshop-app with the workshop kit from inside workshop-app/ — test network allow/deny rules and inspect what the kit injects.",
     docsLinks: [
       { label: "Customize", href: sandboxDocs.customize },
       { label: "Kits", href: sandboxDocs.kits },
       { label: "Usage", href: sandboxDocs.usage },
       { label: "Cursor agent", href: sandboxDocs.cursor },
     ],
-    task: `1. From the repository root, run sbx run cursor . with the workshop kit from a local path.
-2. curl http://127.0.0.1:3000 inside the VM and expect HTTP 200. Check forwarded port with sbx ls.
-3. Remove the sandbox.
-4. Run again with the same kit pulled from Git (git+https://…#dir=customize/kit/workshop-app-nextjs).
-5. Verify HTTP 200 again, then tear down.
+    task: `1. Use your Lab 4 clone — cd docker-sandbox-workshop. Only git clone if missing.
+2. cd workshop-app, copy .env.sandbox.example to .env.local (NEXT_PUBLIC_PLATFORM_URL=http://host.docker.internal:3000).
+3. Preflight: test -f package.json && test -f package-lock.json — if missing, run npm install on the host.
+4. cd workshop-app && sbx run cursor . --kit ../customize/kit/workshop-app-nextjs --name lab5-kit (must run from inside workshop-app/).
+5. Ask the agent to research Kristiyan Velkov on kristiyanvelkov.com and leanpub.com (allowed) — then try Google and LinkedIn (denied). Check sbx policy log.
+6. Ask the agent to list what this kit includes — .cursor/rules/, skill, network caps in spec.yaml.
+7. curl :3000 → HTTP 200. Tear down when done.
 
-Done when both runs start the dev server, curl returns 200, and you understand local vs Git kit paths.`,
+Done when dev server returns 200, allowed-site research works, denied sites fail in policy log, and you can name the kit files and network rules.`,
     hints: [
-      "Kit = declarative runtime mixin — npm ci, dev server on :3000, network allow-list. No custom template needed.",
-      "Local kit: ./labs/customize/kit/workshop-app-nextjs from this repo, or ./customize/kit/workshop-app-nextjs from the workshop monorepo root.",
-      "Git kit: git+https://github.com/kristiyan-velkov/docker-sandbox-workshop.git#dir=customize/kit/workshop-app-nextjs",
-      "sbx ls shows forwarded ports (e.g. localhost:PORT → 3000). Open that URL in your browser.",
-      "First boot may take a minute while npm ci runs — retry curl if you get 000.",
+      "Reuse Lab 4 repo — cd docker-sandbox-workshop. Clone only if missing: git clone https://github.com/kristiyan-velkov/docker-sandbox-workshop.git",
+      "Critical: cd workshop-app && sbx run cursor . — do not run sbx run cursor workshop-app/ from repo root (npm ci fails without package.json at workspace root).",
+      "Kit uses files/home/ bootstrap + commands.startup — not commands.install (install runs before workspace mount).",
+      "Workspace must be workshop-app/ (contains package.json) — cd workshop-app && sbx run cursor .",
+      "Kit path from workshop-app/: --kit ../customize/kit/workshop-app-nextjs",
+      "Kit network: network.allowedDomains / deniedDomains in spec.yaml (schemaVersion 1).",
+      "Allowed prompt: Research Kristiyan Velkov — read kristiyanvelkov.com and list books on leanpub.com.",
+      "Denied prompt: Search Google for Kristiyan Velkov and summarize LinkedIn results — expect failures; confirm with sbx policy log lab5-kit.",
+      "Kit inventory prompt: List files under .cursor/rules/ and .claude/skills/. Summarize network.allowedDomains and commands.startup from customize/kit/workshop-app-nextjs/spec.yaml.",
+      "Kit copies rules to workshop-app/.cursor/rules/ — sandbox-workshop.mdc, project-context.mdc, cursor-agent.mdc, nextjs-app-router.mdc.",
+      "workshop-app links to docker-sandbox-platform — NEXT_PUBLIC_PLATFORM_URL=http://host.docker.internal:3000 in .env.local.",
+      "Local kit: ../customize/kit/workshop-app-nextjs when cwd is workshop-app/.",
+      "Git kit (optional): git+https://github.com/kristiyan-velkov/docker-sandbox-workshop.git#dir=customize/kit/workshop-app-nextjs",
+      "sbx ls shows forwarded ports. First boot may take a minute while npm ci runs.",
     ],
     steps: [
       {
-        label: "Kit — local path",
-        task: "From repo root, start Cursor with the workshop kit from disk. Use ./labs/customize/kit/… here, or ./customize/kit/… from the monorepo root.",
+        label: "Use existing repo",
+        task: "cd into your Lab 4 clone at docker-sandbox-workshop/. Clone from GitHub only if the folder is missing.",
         command:
-          "sbx run cursor . --kit ./labs/customize/kit/workshop-app-nextjs --name lab5-local",
+          "cd docker-sandbox-workshop\n# missing? → git clone https://github.com/kristiyan-velkov/docker-sandbox-workshop.git && cd docker-sandbox-workshop",
       },
       {
-        label: "Verify local",
-        task: "Confirm the dev server is up inside the sandbox. HTTP 200 means Next.js is serving. Check sbx ls for the forwarded browser URL.",
+        label: "Env on host",
+        task: "cd workshop-app, copy .env.sandbox.example to .env.local. NEXT_PUBLIC_PLATFORM_URL points platform links to host :3000.",
         command:
-          "sbx ls\nsbx exec lab5-local -- curl -s -o /dev/null -w '%{http_code}\\n' http://127.0.0.1:3000\nsbx policy log lab5-local --limit 10",
+          "cd workshop-app\ncp .env.sandbox.example .env.local\n# NEXT_PUBLIC_PLATFORM_URL=http://host.docker.internal:3000",
       },
       {
-        label: "Clean up local",
-        task: "Remove the local-kit sandbox before trying the Git kit.",
-        command: "sbx rm lab5-local --force",
+        label: "Preflight",
+        task: "Confirm package.json and package-lock.json exist before sbx — kit npm ci requires both at workspace root.",
+        command:
+          "test -f package.json && test -f package-lock.json && echo OK\n# missing lockfile? → npm install on host, then retry",
       },
       {
-        label: "Kit — from Git",
-        task: "Same app, same kit — this time sbx pulls the kit spec from the workshop monorepo URL at run time.",
+        label: "Run with kit",
+        task: "Start Cursor with the workshop kit. Workspace = workshop-app/ (must contain package.json). Kit bootstraps npm ci via ${WORKDIR} at startup.",
         command:
-          'sbx run cursor . --kit "git+https://github.com/kristiyan-velkov/docker-sandbox-workshop.git#dir=customize/kit/workshop-app-nextjs" --name lab5-git',
+          "cd workshop-app\nsbx run cursor . --kit ../customize/kit/workshop-app-nextjs --name lab5-kit",
       },
       {
-        label: "Verify Git kit",
-        task: "Curl the dev server again. Expect HTTP 200 — the Git-sourced kit should behave like the local copy.",
+        label: "Network — allowed",
+        task: "Ask the agent to research you on allowed domains. Expect kristiyanvelkov.com and leanpub.com to work.",
         command:
-          "sbx ls\nsbx exec lab5-git -- curl -s -o /dev/null -w '%{http_code}\\n' http://127.0.0.1:3000",
+          "# Cursor prompt:\nResearch Kristiyan Velkov — read kristiyanvelkov.com for bio and books, check leanpub.com for publications. Summarize what you find.",
+      },
+      {
+        label: "Network — denied",
+        task: "Ask the agent to search Google and LinkedIn. Expect blocked requests — confirm with policy log.",
+        command:
+          "# Cursor prompt:\nSearch Google for Kristiyan Velkov and fetch LinkedIn profile info. Report what worked and what failed.\n\nsbx policy log lab5-kit --limit 15",
+      },
+      {
+        label: "Inspect kit",
+        task: "Ask the agent what the kit injected — rules, skill, startup command, network caps.",
+        command:
+          "# Cursor prompt:\nWhat did the workshop-app-nextjs kit add to this workspace? List .cursor/rules/ and .claude/skills/ files. Summarize network.allowedDomains and commands.startup from customize/kit/workshop-app-nextjs/spec.yaml.\n\nsbx exec lab5-kit -- curl -s -o /dev/null -w '%{http_code}\\n' http://127.0.0.1:3000\nsbx exec lab5-kit -- ls -la .cursor/rules/",
+      },
+      {
+        label: "Optional — Git kit",
+        task: "If you need a fresh monorepo from GitHub, run with the Git kit URL. Skip if you already have the local clone.",
+        command:
+          'sbx rm lab5-kit --force\nsbx run cursor . --kit "git+https://github.com/kristiyan-velkov/docker-sandbox-workshop.git#dir=customize/kit/workshop-app-nextjs" --name lab5-git',
       },
       {
         label: "Clean up",
-        task: "Remove the Git-kit sandbox when verification passes.",
-        command: "sbx rm lab5-git --force",
+        task: "Remove the sandbox when verification passes.",
+        command: "sbx rm lab5-kit --force",
       },
     ],
   },
   {
     id: "lab-06",
-    title: "Templates · Kits · Skills",
-    time: "15 min",
+    title: "Create Your Custom Kit",
+    time: "25 min",
     folder: "lab-06-customize-stack",
     githubPath: "lab-06-customize-stack",
     description:
-      "Stack customize/ template + kit, inspect layers, sbx kit add.",
+      "Copy the kit template, fill in spec.yaml, validate, and run workshop-app with your own mixin kit — final lab.",
     docsLinks: [
       { label: "Customize", href: sandboxDocs.customize },
-      { label: "Templates", href: sandboxDocs.templates },
       { label: "Kits", href: sandboxDocs.kits },
+      { label: "Kit reference", href: sandboxDocs.kits },
       { label: "Run agents", href: sandboxDocs.agents },
     ],
-    task: `1. sbx kit validate the workshop kit — fix any spec errors before running.
-2. Run the full template + kit stack as customize-stack.
-3. sbx exec and confirm .claude/skills/workshop-app/SKILL.md exists in the VM.
-4. sbx kit add to copy the kit into kit-add-demo/ on the host.
+    task: `1. From docker-sandbox-workshop (Lab 4 clone), cp -r lab-06-customize-stack/kit-template ./my-workshop-kit.
+2. Fill in spec.yaml — name, network.allowedDomains, environment, commands.startup (per kit-reference).
+3. Edit files/workspace/.claude/skills/my-workshop-kit/SKILL.md with your team rules.
+4. sbx kit validate ./my-workshop-kit until clean.
+5. cd workshop-app && sbx run cursor . --kit ../my-workshop-kit --name lab6-my-kit.
+6. curl :3000 → HTTP 200. Ask the agent to read your kit skill and summarize your rules.
 
-Done when validate passes with no errors, the skill file exists in the VM, and kit-add-demo/ appears on the host.`,
+Done when validate passes, your kit boots the dev server, and you can explain each spec.yaml block.`,
     hints: [
-      "Validate first — sbx kit validate catches spec.yaml mistakes before a 5-minute sandbox boot fails.",
-      "Skills are injected into the workspace at .claude/skills/<name>/SKILL.md — not into the template image.",
-      "Requires a kit from Lab 5 — use ./labs/customize/kit/workshop-app-nextjs or the Git kit URL.",
-      "kit add is a host-side copy helper — useful to fork a kit before customizing in Lab 8.",
+      "Never edit lab-06-customize-stack/kit-template/ in place — copy to ./my-workshop-kit first.",
+      "schemaVersion: \"1\" + kind: mixin — extends cursor without a custom sandbox kit.",
+      "network.allowedDomains — outbound allow-list; network.deniedDomains — explicit blocks (deny wins).",
+      "files/home/ — bootstrap script (npm ci + dev server); commands.startup runs it in background.",
+      "commands.install — for agent installs (curl | bash) at create time, not npm in mounted workspaces.",
+      "files/workspace/ — static files copied into the synced workspace (skills, rules, .env examples).",
+      "If you change name in spec.yaml, rename the skill folder under files/workspace/.claude/skills/ to match.",
+      "Keep ./my-workshop-kit/ after the lab — reuse with --kit on any project.",
     ],
     steps: [
       {
-        label: "Validate kit",
-        task: "Run validate from repo root. Read every error line and fix spec.yaml before continuing — zero errors is the goal.",
-        command: "sbx kit validate ./customize/kit/workshop-app-nextjs",
-      },
-      {
-        label: "Full stack",
-        task: "Launch the same stack as Lab 5 but name it customize-stack. Confirm dev server starts and agent has workshop rules.",
+        label: "Copy kit template",
+        task: "Copy the Lab 6 kit template to my-workshop-kit/ at repo root. Inspect spec.yaml and files/ before editing.",
         command:
-          "sbx run --template workshop-app-cursor:v1 cursor workshop-app/ --kit ./customize/kit/workshop-app-nextjs --name customize-stack",
+          "cd docker-sandbox-workshop\ncp -r lab-06-customize-stack/kit-template ./my-workshop-kit\nls my-workshop-kit/",
       },
       {
-        label: "Verify skill",
-        task: "Check the skill file inside the VM. Exit code 0 = file exists. If missing, re-check kit files/ in the spec.",
+        label: "Fill in spec.yaml",
+        task: "Set your kit name, network.allowedDomains, env vars, and skill. See lab GUIDE.md for the blank template reference.",
         command:
-          "sbx exec customize-stack -- test -f .claude/skills/workshop-app/SKILL.md",
+          "cat my-workshop-kit/spec.yaml\n# See lab-06-customize-stack/GUIDE.md — Blank template reference",
       },
       {
-        label: "kit add",
-        task: "Copy the workshop kit into ./kit-add-demo on the host. Inspect the folder — it should mirror the kit structure.",
-        command: "sbx kit add kit-add-demo ./customize/kit/workshop-app-nextjs",
-      },
-    ],
-  },
-  {
-    id: "lab-07",
-    title: "Build a Component",
-    time: "20 min",
-    folder: "lab-07-build-component",
-    githubPath: "lab-07-build-component",
-    description:
-      "Clone mode + kit — agent adds a UI component, lint and build gate.",
-    docsLinks: [
-      { label: "Clone mode", href: sandboxDocs.workflowsCloneMode },
-      { label: "Workflow patterns", href: sandboxDocs.workflows },
-      { label: "Run agents", href: sandboxDocs.agents },
-      { label: "Kits", href: sandboxDocs.kits },
-    ],
-    task: `1. sbx run --clone cursor workshop-app/ with kit as feature-component.
-2. Prompt the agent to create branch feat/lab-7-stats-card, add a WorkshopStats component, run npm run lint and npm run build, then commit.
-3. sbx exec npm run build yourself as a quality gate.
-4. git fetch sandbox-feature-component on the host and review the diff.
-
-Done when build exits 0, the component renders on the home page, and you reviewed the diff on the host.`,
-    hints: [
-      'Paste this agent prompt: "Create branch feat/lab-7-stats-card. Add WorkshopStats showing event, location, duration from workshop-data.ts using existing Apple CSS tokens. Render on home below hero. Run npm run lint && npm run build. Commit when green."',
-      "Do not accept agent output until npm run build passes inside the sandbox — that is your quality gate.",
-      "Use existing shadcn/Tailwind tokens — tell the agent not to add new UI libraries.",
-      "Host git status should stay clean until you explicitly merge or checkout the fetched branch.",
-    ],
-    steps: [
-      {
-        label: "Clone + kit",
-        task: "Start clone-mode Cursor with the workshop kit. Wait for npm ci and dev server before sending the component prompt.",
+        label: "Customize & validate",
+        task: "Edit the skill SKILL.md, then validate until zero errors.",
         command:
-          "sbx run --clone cursor workshop-app/ --kit ./customize/kit/workshop-app-nextjs --name feature-component",
+          "sbx kit validate ./my-workshop-kit\nsbx kit inspect ./my-workshop-kit",
       },
       {
-        label: "Build gate",
-        task: "Run production build inside the VM after the agent finishes. Exit code 0 required — fix or re-prompt the agent if it fails.",
-        command: "sbx exec feature-component -- npm run build",
-      },
-      {
-        label: "Fetch",
-        task: "On the host: fetch the agent branch and inspect with git log and git diff before merging to main.",
-        command: "git fetch sandbox-feature-component",
-      },
-    ],
-  },
-  {
-    id: "lab-08",
-    title: "Create Your Kit",
-    time: "20 min",
-    folder: "lab-08-create-kit",
-    githubPath: "lab-08-create-kit",
-    description: "Copy starter-kit, customize spec.yaml, validate and pack.",
-    docsLinks: [
-      { label: "Kits", href: sandboxDocs.kits },
-      { label: "Customize", href: sandboxDocs.customize },
-      { label: "sbx CLI", href: sandboxDocs.cli },
-    ],
-    task: `1. cp lab-08-create-kit/starter-kit to ./my-workshop-kit — never edit the starter in place.
-2. Edit spec.yaml: set your kit name, caps.network.allow hosts you need, and tweak the skill SKILL.md.
-3. sbx kit validate ./my-workshop-kit until it passes with no errors.
-4. sbx kit pack to my-workshop-kit.zip.
-
-Done when validate reports no errors and the zip file exists for Lab 9.`,
-    hints: [
-      "Edit only ./my-workshop-kit — the starter-kit/ folder stays pristine for other attendees.",
-      "In spec.yaml: name, caps.network.allow (npm, Supabase, GitHub as needed), and files/workspace paths must match your layout.",
-      "Run validate after every spec change — one typo in YAML blocks the whole kit.",
-      "Pack produces my-workshop-kit.zip — you can also use the folder directly with --kit ./my-workshop-kit in Lab 9.",
-    ],
-    steps: [
-      {
-        label: "Copy starter",
-        task: "Copy the starter scaffold to my-workshop-kit/ at repo root. ls my-workshop-kit/ — you should see spec.yaml and files/.",
-        command: "cp -r lab-08-create-kit/starter-kit ./my-workshop-kit",
-      },
-      {
-        label: "Validate",
-        task: "Customize spec.yaml and skill content, then validate. Fix every reported error until the command exits successfully.",
-        command: "sbx kit validate ./my-workshop-kit",
-      },
-      {
-        label: "Pack",
-        task: "Pack the kit into a zip for sharing or backup. Confirm my-workshop-kit.zip was created in the current directory.",
-        command: "sbx kit pack ./my-workshop-kit -o my-workshop-kit.zip",
-      },
-    ],
-  },
-  {
-    id: "lab-09",
-    title: "Use Your Custom Kit",
-    time: "15 min",
-    folder: "lab-09-use-custom-kit",
-    githubPath: "lab-09-use-custom-kit",
-    description: "Run workshop-app with the kit you built in Lab 8.",
-    docsLinks: [
-      { label: "Kits", href: sandboxDocs.kits },
-      { label: "Clone mode", href: sandboxDocs.workflowsCloneMode },
-      { label: "Workflow patterns", href: sandboxDocs.workflows },
-    ],
-    task: `1. sbx run --clone cursor workshop-app/ --kit ./my-workshop-kit --name my-kit-clone.
-2. sbx exec and verify .claude/skills/my-workshop-kit/SKILL.md exists in the workspace.
-3. Ask the agent a question that should trigger your skill instructions.
-
-Done when the skill file is present and the agent follows your kit instructions.`,
-    hints: [
-      "If my-workshop-kit/ is missing, complete Lab 8 first or use --kit ./customize/kit/workshop-app-nextjs as fallback.",
-      "Skill path must match the folder name in your kit — default starter uses my-workshop-kit.",
-      "Clone mode keeps your host Git clean while you test whether the kit injects the right files and rules.",
-      "Check sbx ls for the dev-server port if you want to preview workshop-app in the browser.",
-    ],
-    steps: [
-      {
-        label: "Run",
-        task: "From repo root: launch clone-mode Cursor with your custom kit. Confirm the sandbox name is my-kit-clone for the verify step.",
+        label: "Run your kit",
+        task: "Launch Cursor on workshop-app/ with your custom kit. Wait for npm ci and background dev server.",
         command:
-          "sbx run --clone cursor workshop-app/ --kit ./my-workshop-kit --name my-kit-clone",
+          "cp workshop-app/.env.sandbox.example workshop-app/.env.local\ncd workshop-app\nsbx run cursor . --kit ../my-workshop-kit --name lab6-my-kit",
       },
       {
-        label: "Verify skill",
-        task: "Confirm your skill file landed in the workspace. test -f exits 0 on success — if it fails, check files/ paths in spec.yaml.",
+        label: "Verify",
+        task: "Confirm HTTP 200, kit skill in workspace, and agent reads your kit instructions.",
         command:
-          "sbx exec my-kit-clone -- test -f .claude/skills/my-workshop-kit/SKILL.md",
-      },
-    ],
-  },
-  {
-    id: "lab-10",
-    title: "Capstone · PR Workflow",
-    time: "20 min",
-    folder: "lab-10-capstone",
-    githubPath: "lab-10-capstone",
-    description:
-      "GitHub secret, clone mode, agent opens a PR — full delivery loop.",
-    docsLinks: [
-      { label: "Workflow patterns", href: sandboxDocs.workflows },
-      { label: "Authenticated CLI", href: sandboxDocs.workflowsAuthCli },
-      { label: "Credential proxy", href: sandboxDocs.credentials },
-      { label: "CI & headless", href: sandboxDocs.workflowsCi },
-    ],
-    task: `1. Pipe gh auth token to sbx secret set -g github on the host (run gh auth status first).
-2. sbx run --clone cursor workshop-app/ --kit ./my-workshop-kit --name capstone.
-3. Agent creates feat/lab-10-capstone, edits copy, commits, and runs gh pr create — or you git fetch sandbox-capstone and open the PR from the host.
-4. sbx policy log --limit 20 to audit GitHub API calls.
-
-Done when a PR exists (or branch is fetched on host), gh worked via the proxy, and policy log shows api.github.com allowed.`,
-    hints: [
-      'Never commit tokens — echo "$(gh auth token)" | sbx secret set -g github stores it on the host only.',
-      "If gh push fails inside the VM: git fetch sandbox-capstone on the host and open the PR from there.",
-      'Agent prompt: "Branch feat/lab-10-capstone. Update hero copy in workshop-data.ts. npm run build. Commit and gh pr create with a short description."',
-      "sbx policy log confirms credentials were injected — you should see api.github.com without the raw token in logs.",
-    ],
-    steps: [
-      {
-        label: "GitHub secret",
-        task: "Store GitHub token on the host for the credential proxy. Requires gh CLI logged in — run gh auth status first.",
-        command: 'echo "$(gh auth token)" | sbx secret set -g github',
+          "sbx ls\nsbx exec lab6-my-kit -- curl -s -o /dev/null -w '%{http_code}\\n' http://127.0.0.1:3000\nsbx exec lab6-my-kit -- test -f .claude/skills/my-workshop-kit/SKILL.md && echo \"skill OK\"\n# Cursor prompt: Read .claude/skills/my-workshop-kit/SKILL.md and summarize my kit rules.",
       },
       {
-        label: "Clone + kit",
-        task: "Start the capstone sandbox in clone mode with your kit. Use my-workshop-kit from Lab 8 or swap in ./customize/kit/workshop-app-nextjs.",
-        command:
-          "sbx run --clone cursor workshop-app/ --kit ./my-workshop-kit --name capstone",
-      },
-      {
-        label: "Fetch",
-        task: "Fallback if in-VM push fails: on the host, fetch the agent branch and finish the PR workflow locally with gh or git.",
-        command: "git fetch sandbox-capstone",
-      },
-      {
-        label: "Audit",
-        task: "Review the last 20 outbound requests. Confirm GitHub API calls were allowed and no unexpected hosts were contacted.",
-        command: "sbx policy log --limit 20",
+        label: "Clean up",
+        task: "Remove the sandbox. Keep ./my-workshop-kit/ for future projects.",
+        command: "sbx rm lab6-my-kit --force",
       },
     ],
   },

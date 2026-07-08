@@ -1,6 +1,6 @@
 # docker-sandbox-platform — Agent Rules
 
-WeAreDevelopers Berlin · Docker Sandboxes workshop platform (Next.js 16) — labs, register, login, progress.
+Docker Sandboxes workshop platform (Next.js 16) — labs, register, login, progress.
 
 ## Mission
 

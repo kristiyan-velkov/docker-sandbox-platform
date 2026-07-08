@@ -77,8 +77,8 @@ export default async function HomePage() {
             title="Workshop labs"
             description={
               session
-                ? "Ten labs with README + GUIDE on GitHub. Play each lab to start the timer, complete it when done."
-                : "Log in to access all ten hands-on labs, track progress, and save your time per lab."
+                ? "Six labs with README + GUIDE on GitHub. Play each lab to start the timer, complete it when done."
+                : "Log in to access all six hands-on labs, track progress, and save your time per lab."
             }
           />
           {session ? (

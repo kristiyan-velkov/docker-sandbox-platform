@@ -3,7 +3,7 @@ import { HeroBackground } from "@/components/hero-background";
 import { LinkButton } from "@/components/link-button";
 
 const HERO_STATS = [
-  { value: "10", label: "Hands-on labs" },
+  { value: "6", label: "Hands-on labs" },
   { value: "sbx", label: "CLI workflow" },
   { value: "microVM", label: "Isolation" },
 ] as const;
@@ -21,7 +21,7 @@ export function HomeHero({ isRegistered = false }: HomeHeroProps) {
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
           <div className="min-w-0">
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-indigo-600">
-              WeAreDevelopers · Berlin
+              Docker Sandboxes Workshop
             </p>
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-5xl xl:text-6xl">
               <span className="text-slate-900">Install sbx.</span>{" "}

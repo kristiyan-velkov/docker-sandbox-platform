@@ -7,6 +7,7 @@ import { getAttendeeSession } from "@/lib/workshop/attendee-session";
 const publicLinks = [
   { href: "/", label: "Home" },
   { href: "/learn", label: "Learn" },
+  { href: "/resources", label: "Resources" },
   { href: "/questions", label: "Q&A" },
   { href: "/about", label: "About" },
 ] as const;
