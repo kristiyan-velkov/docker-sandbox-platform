@@ -1,0 +1,80 @@
+# zeropsPreprocessor=on
+# yaml-language-server: $schema=https://api.app-prg1.zerops.io/api/rest/public/settings/zerops-yaml-json-schema.json
+
+zerops:
+  # ── nextjs ───────────────────────────────────────────────────────────────────
+  # Next.js 16 standalone bundle served by Node.js 22 on port 3000.
+  # Registration and Q&A use Supabase via Server Actions — no local database.
+  #
+  # The setup name "nextjs" matches the service hostname in import.yaml so
+  # Zerops resolves this block automatically — no zeropsSetup field needed.
+  - setup: nextjs
+
+    # ── Build ───────────────────────────────────────────────────────────────
+    build:
+      base: ubuntu/nodejs@22
+
+      buildCommands:
+        # Reproducible install — npm ci reads exactly what is in package-lock.json.
+        # devDependencies are required by `next build` (TypeScript, PostCSS, Tailwind).
+        # The standalone output in .next/standalone only ships the runtime subset.
+        - npm ci
+        - npm run build
+        # Standalone output omits static assets; copy them into the bundle
+        # so the deploy directory is fully self-contained.
+        - cp -r .next/static  .next/standalone/.next/static
+        - cp -r public        .next/standalone/public
+
+      deployFiles:
+        - .next/standalone/~
+
+      cache:
+        - ~/.npm
+
+      # NEXT_PUBLIC_* are inlined at build time — must be set before `npm run build`.
+      # Service-level env vars from the Zerops GUI are also available in the build
+      # container; set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
+      # before the first deploy, then rebuild after any change.
+      envVariables:
+        NODE_ENV: production
+
+    # ── Deploy ──────────────────────────────────────────────────────────────
+    deploy:
+      readinessCheck:
+        httpGet:
+          port: 3000
+          path: /
+
+    # ── Runtime ─────────────────────────────────────────────────────────────
+    run:
+      base: ubuntu/nodejs@22
+
+      ports:
+        - port: 3000
+          httpSupport: true
+
+      envVariables:
+        NODE_ENV: production
+        PORT: "3000"
+        NEXT_TELEMETRY_DISABLED: "1"
+
+        # ── Supabase (public — baked into client bundle at build time) ───────
+        # Set in Zerops GUI → nextjs service → Environment Variables:
+        #   NEXT_PUBLIC_SUPABASE_URL
+        #   NEXT_PUBLIC_SUPABASE_ANON_KEY  (or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)
+        #
+        # Rebuild after changing NEXT_PUBLIC_* values — they are inlined at build.
+
+        # ── Server secrets (Zerops Secret Variables) ────────────────────────
+        #   WORKSHOP_ADMIN_SECRET      — admin dashboard login
+        #   SUPABASE_SERVICE_ROLE_KEY  — server-side Supabase (bypasses RLS)
+
+      # HOSTNAME is set inline to avoid conflicting with the Zerops system
+      # variable of the same name. Next.js standalone binds via HOSTNAME;
+      # 0.0.0.0 accepts connections on all interfaces inside the container.
+      start: HOSTNAME=0.0.0.0 node server.js
+
+      healthCheck:
+        httpGet:
+          port: 3000
+          path: /

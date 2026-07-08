@@ -1,0 +1,47 @@
+# zeropsPreprocessor=on
+# yaml-language-server: $schema=https://api.app-prg1.zerops.io/api/rest/public/settings/import-project-yaml-json-schema.json
+#
+# Use when workshop-app/ is the git repository root.
+# For the full monorepo, use ../import.yaml instead.
+
+project:
+  name: docker-sandbox-workshop
+  description: WeAreDevelopers Berlin — Docker Sandboxes workshop demo site
+  tags:
+    - workshop
+    - nextjs
+    - docker-sandboxes
+
+services:
+  # ── Next.js workshop app ───────────────────────────────────────────────────
+  # Standalone Next.js 16 bundle served by Node.js 22 — registration and Q&A
+  # use Supabase via Server Actions. No database required on this service.
+  - hostname: nextjs
+    type: ubuntu/nodejs@22
+
+    # Point this at your own fork after cloning the repository.
+    buildFromGit: https://github.com/kristiyan-velkov/docker-sandbox-workshop
+    zeropsSetup: nextjs
+
+    enableSubdomainAccess: true
+
+    minContainers: 1
+    maxContainers: 3
+
+    verticalAutoscaling:
+      minRam: 0.5
+      maxRam: 2
+      minCpu: 1
+      maxCpu: 2
+
+    envVariables:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_SUPABASE_URL: https://ikagquokcvhbdzmjcdjp.supabase.co
+
+    envSecrets:
+      WORKSHOP_ADMIN_SECRET: <@generateRandomString(<32>)>
+
+    dotEnvSecrets: |
+      NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
+      SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
