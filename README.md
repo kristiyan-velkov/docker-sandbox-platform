@@ -70,6 +70,14 @@ npm run lint
 
 ## Run in Docker Sandbox
 
+Requires **[sbx 0.43.x](https://docs.docker.com/ai/sandboxes/release-notes/)** or newer:
+
+```bash
+brew trust docker/tap
+brew install docker/tap/sbx   # or: brew upgrade docker/tap/sbx
+sbx version                   # expect 0.43.x
+```
+
 During the workshop, attendees work through **six labs** in the [docker-sandbox-workshop](https://github.com/kristiyan-velkov/docker-sandbox-workshop) monorepo — from first sandbox through clone mode, pre-built kit (Lab 5), and creating a custom kit (Lab 6). Start at [lab-05-workshop-app](https://github.com/kristiyan-velkov/docker-sandbox-workshop/tree/main/lab-05-workshop-app) for kit setup or [lab-06-customize-stack](https://github.com/kristiyan-velkov/docker-sandbox-workshop/tree/main/lab-06-customize-stack) for the final custom-kit lab.
 
 Quick smoke test from this repo root:
@@ -78,8 +86,6 @@ Quick smoke test from this repo root:
 sbx login
 sbx secret set -g cursor      # Cursor API key — run before sbx run cursor
 
-sbx run cursor . --name platform-dev
-# or
 sbx run cursor . --name platform-dev
 ```
 

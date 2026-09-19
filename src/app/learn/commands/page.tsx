@@ -7,7 +7,7 @@ import { PageHero, PageShell, SectionTitle } from "@/components/page-shell";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
-import { sandboxDocs, sbxCommandGroups } from "@/lib/learning-data";
+import { sandboxDocs, sbxCommandGroups, sbxMinVersion } from "@/lib/learning-data";
 
 export const metadata = {
   title: "Commands",
@@ -22,7 +22,7 @@ export default function CommandsPage() {
           <PageHero
             eyebrow={<Badge variant="secondary">Learning · CLI</Badge>}
             title="sbx command reference"
-            description="Short explanations for the commands used in this workshop. For every flag and option, see the official CLI reference."
+            description={`Short explanations for the commands used in this workshop (sbx ${sbxMinVersion}+). For every flag and option, see the official CLI reference.`}
             actions={
               <LinkButton href={sandboxDocs.cli} target="_blank" rel="noreferrer">
                 <ExternalLink className="size-4" />
@@ -60,8 +60,10 @@ export default function CommandsPage() {
 
         <section className="mt-14 rounded-[18px] border border-black/[0.06] bg-muted/30 p-6">
           <p className="text-[15px] text-muted-foreground">
-            This page covers the commands used in the workshop labs. For the complete reference
-            including all flags, profiles, and agent options, see the{" "}
+            This page covers the commands used in the workshop labs (targets sbx {sbxMinVersion}+).
+            See{" "}
+            <DocLink href={sandboxDocs.releaseNotes}>release notes</DocLink> for breaking changes.
+            For the complete reference including all flags, profiles, and agent options, see the{" "}
             <DocLink href={sandboxDocs.cli}>official sbx CLI documentation</DocLink>.
           </p>
         </section>

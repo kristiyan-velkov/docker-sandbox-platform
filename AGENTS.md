@@ -76,26 +76,35 @@ npm run lint
 
 ## sbx (live workshop demo)
 
+Requires **sbx 0.43.x** — `brew upgrade docker/tap/sbx && sbx version`.
+
 ```bash
-# From repo root — build template once (no shell scripts)
-cd ../customize/templates/workshop-app-cursor
-docker build -t workshop-app-cursor:v1 .
-docker image save workshop-app-cursor:v1 -o workshop-app-cursor.tar
-sbx template load workshop-app-cursor.tar
-cd ../../workshop-app
+# From workshop-app/ — mixin kit extends cursor ( --kit is for mixins )
+cd workshop-app
+sbx run cursor . \
+  --kit ../customize/kit/workshop-app-nextjs \
+  --name workshop-ui
 
-sbx run --template workshop-app-cursor:v1 cursor . \
-  --kit ../customize/kit/workshop-app-nextjs --name workshop-ui
+# Optional: publish dev server to host at create time
+sbx run cursor . \
+  --kit ../customize/kit/workshop-app-nextjs \
+  --publish 3000:3000 \
+  --name workshop-ui
 
-# Kit only
-sbx run cursor . --kit ../customize/kit/workshop-app-nextjs --name workshop-ui
-
-# Clone mode — see lab-04-clone-workflow
+# Clone mode — from monorepo Git root
+cd ..
 sbx run --clone cursor . \
-  --kit ../customize/kit/workshop-app-nextjs --name feature/workshop-ui
+  --kit customize/kit/workshop-app-nextjs \
+  --name feature/workshop-ui
+
+# Template + kit (build once from customize/templates/workshop-app-cursor)
+sbx template load workshop-app-cursor.tar
+cd workshop-app
+sbx run -t workshop-app-cursor:v1 cursor . \
+  --kit ../customize/kit/workshop-app-nextjs --name workshop-ui
 ```
 
-Prefer `--clone` or a named sandbox so main stays clean. Never put API keys in the repo — use `sbx secret set -g anthropic` on the host.
+Prefer `--clone` or a named sandbox so main stays clean. Never put API keys in the repo — use `sbx secret set -g anthropic` on the host. Validate kits with `sbx kit validate` before run.
 
 ## Do not
 

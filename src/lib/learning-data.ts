@@ -6,6 +6,7 @@ export const sandboxDocs = {
   customize: "https://docs.docker.com/ai/sandboxes/customize/",
   templates: "https://docs.docker.com/ai/sandboxes/customize/templates/",
   kits: "https://docs.docker.com/ai/sandboxes/customize/kits/",
+  kitReference: "https://docs.docker.com/ai/sandboxes/customize/kit-reference/",
   architecture: "https://docs.docker.com/ai/sandboxes/architecture/",
   security: "https://docs.docker.com/ai/sandboxes/security/",
   credentials: "https://docs.docker.com/ai/sandboxes/security/credentials/",
@@ -17,9 +18,13 @@ export const sandboxDocs = {
   workflowsCi: "https://docs.docker.com/ai/sandboxes/workflows/#ci-and-headless-use",
   cursor: "https://docs.docker.com/ai/sandboxes/agents/cursor/",
   cli: "https://docs.docker.com/reference/cli/sbx/",
+  releaseNotes: "https://docs.docker.com/ai/sandboxes/release-notes/",
   troubleshooting: "https://docs.docker.com/ai/sandboxes/troubleshooting/",
   faq: "https://docs.docker.com/ai/sandboxes/faq/",
 } as const;
+
+/** Workshop targets sbx 0.43.x — see release notes for breaking changes. */
+export const sbxMinVersion = "0.43.0";
 
 export const learnNav = [
   { href: "/learn", label: "Overview" },
@@ -51,7 +56,7 @@ export const sandboxOverview = [
   },
   {
     title: "Templates & kits",
-    body: "Templates snapshot a whole sandbox image (sbx template save, -t). Kits are lighter: a spec.yaml + files/ folder passed with --kit. A mixin kit extends an existing agent — network rules, startup scripts (npm ci + dev server), and workspace files (skills, rules) without rebuilding the image.",
+    body: "Templates snapshot a whole sandbox image (sbx template save, -t). Kits are lighter: spec.yaml + files/. Mixin kits extend a built-in agent with --kit (network, startup, workspace files). Full sandbox kits can be passed as the agent positional: sbx run ./my-kit/. Validate with sbx kit validate before every run.",
     docsUrl: sandboxDocs.kits,
   },
   {
@@ -89,12 +94,22 @@ export const sbxCommandGroups: readonly CommandGroup[] = [
         summary: "Install the sbx CLI on macOS via Homebrew.",
       },
       {
+        command: "brew upgrade docker/tap/sbx",
+        summary: "Upgrade to the latest stable sbx (workshop targets 0.43.x).",
+        docsUrl: sandboxDocs.releaseNotes,
+      },
+      {
         command: "sbx version",
-        summary: "Print the installed CLI version.",
+        summary: "Print the installed CLI version — expect 0.43.x or newer for this workshop.",
       },
       {
         command: "sbx login",
         summary: "Sign in with your Docker account (required once per machine).",
+      },
+      {
+        command: "sbx diagnose",
+        summary: "Check local installation, daemon, and common misconfigurations.",
+        docsUrl: sandboxDocs.troubleshooting,
       },
     ],
   },
@@ -120,8 +135,18 @@ export const sbxCommandGroups: readonly CommandGroup[] = [
       },
       {
         command: "sbx run -t lab2-kit:v1 cursor . --name lab2-kit",
-        summary: "Reuse a saved template image (-t) for a custom environment.",
+        summary: "Reuse a saved template image (-t / --template) for a custom environment.",
         docsUrl: sandboxDocs.customize,
+      },
+      {
+        command: "sbx run cursor . --name my-sandbox --publish 8080:3000",
+        summary: "Publish host port 8080 → sandbox :3000 at create time (-p / --publish).",
+        docsUrl: sandboxDocs.usage,
+      },
+      {
+        command: "sbx run --name existing-sandbox",
+        summary: "Re-attach to a running sandbox by name — agent is read from the existing spec.",
+        docsUrl: sandboxDocs.usage,
       },
       {
         command: "sbx create shell . --name lab2 -q",
@@ -197,11 +222,19 @@ export const sbxCommandGroups: readonly CommandGroup[] = [
         summary: "Initialize the balanced policy profile (once per machine).",
       },
       {
-        command: 'sbx policy deny network "api.example.com"',
-        summary: "Block outbound HTTPS to a specific host.",
+        command: "sbx policy deny network api.example.com",
+        summary: "Block outbound HTTPS to a specific host (global).",
       },
       {
-        command: 'sbx policy allow network "registry.npmjs.org"',
+        command: "sbx policy deny network --sandbox my-sandbox ads.example.com",
+        summary: "Block a host for one sandbox only.",
+      },
+      {
+        command: "sbx run cursor . --deny-network google.com --name lab2",
+        summary: "Per-sandbox deny at create time — narrower than a global rule.",
+      },
+      {
+        command: "sbx policy allow network registry.npmjs.org",
         summary: "Explicitly allow a host when using strict deny-by-default.",
       },
       {
@@ -254,13 +287,44 @@ export const sbxCommandGroups: readonly CommandGroup[] = [
       },
       {
         command: "sbx ports my-sandbox --publish 8080:3000",
-        summary: "Forward host port 8080 to port 3000 inside the sandbox.",
+        summary: "Forward host port 8080 → sandbox :3000 after start. Defaults to tcp4 (IPv4 loopback).",
         docsUrl: sandboxDocs.usage,
       },
       {
-        command: "sbx cp ./config.json my-sandbox:/home/user/",
+        command: "sbx cp ./config.json my-sandbox:/home/agent/",
         summary: "Copy files between host and sandbox.",
         docsUrl: sandboxDocs.usage,
+      },
+    ],
+  },
+  {
+    id: "kits",
+    title: "Kit mixins",
+    description: "Validate, inspect, and run declarative mixin kits (Lab 5–6).",
+    docsUrl: sandboxDocs.kitReference,
+    commands: [
+      {
+        command: "sbx kit validate ./my-workshop-kit",
+        summary: "Validate spec.yaml and files/ before running — fix all errors first.",
+        docsUrl: sandboxDocs.kitReference,
+      },
+      {
+        command: "sbx kit inspect ./my-workshop-kit",
+        summary: "Show kit identity, network caps, startup commands, and workspace files.",
+      },
+      {
+        command: "sbx kit pack ./my-workshop-kit -o my-workshop-kit.zip",
+        summary: "Package a kit directory as a ZIP for sharing.",
+      },
+      {
+        command: "cd workshop-app && sbx run cursor . --kit ../customize/kit/workshop-app-nextjs --name lab5-kit",
+        summary: "Run a built-in agent with a mixin kit — --kit is for mixins, not full sandbox kits.",
+        docsUrl: sandboxDocs.kits,
+      },
+      {
+        command: "sbx run cursor . --skills=readonly --kit ../my-workshop-kit --name lab6-my-kit",
+        summary: "Share host skills read-only into the sandbox (default in 0.43+). Use --skills=off to disable.",
+        docsUrl: sandboxDocs.releaseNotes,
       },
     ],
   },

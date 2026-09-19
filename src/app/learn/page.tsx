@@ -8,7 +8,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { learnNav, sandboxDocs, sandboxOverview } from "@/lib/learning-data";
+import { learnNav, sandboxDocs, sandboxOverview, sbxMinVersion } from "@/lib/learning-data";
 
 export const metadata = {
   title: "Learn",
@@ -65,11 +65,16 @@ export default function LearnPage() {
 
         <section className="mt-14">
           <SectionTitle title="Quick start" description="Install, sign in, run your first agent." />
-          <CommandBlock command={"brew trust docker/tap\nbrew install docker/tap/sbx\nsbx login\nsbx run cursor ."} />
+          <CommandBlock
+            command={
+              "brew trust docker/tap\nbrew install docker/tap/sbx\nbrew upgrade docker/tap/sbx\nsbx version\nsbx login\nsbx run cursor ."
+            }
+          />
           <p className="mt-4 text-[15px] text-muted-foreground">
-            Full walkthrough in the{" "}
-            <DocLink href={sandboxDocs.getStarted}>get started guide</DocLink> and{" "}
-            <DocLink href={sandboxDocs.usage}>usage patterns</DocLink>.
+            Workshop targets sbx {sbxMinVersion}+. Full walkthrough in the{" "}
+            <DocLink href={sandboxDocs.getStarted}>get started guide</DocLink>,{" "}
+            <DocLink href={sandboxDocs.usage}>usage patterns</DocLink>, and{" "}
+            <DocLink href={sandboxDocs.releaseNotes}>release notes</DocLink>.
           </p>
         </section>
 

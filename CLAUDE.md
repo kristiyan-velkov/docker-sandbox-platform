@@ -10,15 +10,19 @@ Always run commands from `workshop-app/` unless editing parent lab folders.
 
 ## Authentication
 
-- **In sbx sandbox:** credentials via host proxy — `sbx secret set -g anthropic` before `sbx run claude workshop-app/`
+- **In sbx sandbox:** credentials via host proxy — `sbx secret set -g anthropic` before `sbx run claude .` (from `workshop-app/`)
 - **OAuth:** use `/login` inside Claude Code if you have a Claude subscription
 - Never write `ANTHROPIC_API_KEY` or Supabase service keys into source files
 
 ## Recommended workflow
 
 ```bash
-# From repo root
-sbx run --clone claude workshop-app/ --name feature/your-change
+# From workshop monorepo root (clone mode)
+sbx run --clone claude . --name feature/your-change
+
+# Or from workshop-app/ with kit mixin
+cd workshop-app
+sbx run claude . --kit ../customize/kit/workshop-app-nextjs --name feature/your-change
 
 # Inside sandbox
 npm run dev          # verify UI

@@ -81,7 +81,7 @@ export const labs = [
       { label: "Architecture", href: sandboxDocs.architecture },
       { label: "sbx CLI", href: sandboxDocs.cli },
     ],
-    task: `1. Install the sbx CLI and verify the version.
+    task: `1. Install or upgrade sbx to 0.43.x and verify with sbx version.
 2. Sign in with sbx login.
 3. Store your Cursor API key on the host with sbx secret set -g cursor — never put it in a file in this repo.
 4. cd into lab-01-first-sandbox/workspace/ and start Cursor with sbx run cursor . --name my-sandbox.
@@ -91,6 +91,7 @@ export const labs = [
 
 Done when Cursor starts without an API key error, hello.txt exists in workspace/ on the host, delete-me.txt is still present at the lab root, and sbx rm removes my-sandbox from sbx ls.`,
     hints: [
+      "Workshop targets sbx 0.43.x — brew upgrade docker/tap/sbx if sbx version shows an older release.",
       "Work from lab-01-first-sandbox/workspace/ — mounting the repo root is the most common mistake.",
       "delete-me.txt lives one level above workspace/ — the sandbox only syncs the workspace folder, so the agent cannot remove host files outside that mount.",
       "There is no sbx status — use sbx ls when cleaning up.",
@@ -100,9 +101,9 @@ Done when Cursor starts without an API key error, hello.txt exists in workspace/
     steps: [
       {
         label: "Install sbx",
-        task: "Trust Docker's Homebrew tap, install sbx, and print the CLI version. Expect a version string with no errors.",
+        task: "Trust Docker's Homebrew tap, install or upgrade sbx, and print the CLI version. Expect 0.43.x or newer.",
         command:
-          "brew trust docker/tap\nbrew install docker/tap/sbx\nsbx version",
+          "brew trust docker/tap\nbrew install docker/tap/sbx\n# already installed?\nbrew upgrade docker/tap/sbx\nsbx version",
       },
       {
         label: "Sign in",
@@ -169,6 +170,7 @@ Done when Cursor shows blocked and allowed responses, sbx policy log confirms ea
       "Work from lab-02-network-policy/workspace/. Use a second host terminal for sbx policy commands and sbx policy log.",
       "Under balanced policy, www.dockerfrontend.com is blocked until you explicitly allow it.",
       "Ask Cursor to curl and show the full response — a blocked request or policy error means deny worked.",
+      "Per-sandbox deny at create: sbx run cursor . --deny-network google.com --name lab2 (0.42+).",
       "Block a host for one sandbox only: sbx policy deny network --sandbox lab2 ads.example.com",
       "Revoke access for this lab's site: sbx policy deny network --sandbox lab2 www.dockerfrontend.com",
       "Validate blocks and allows on the host with sbx policy log lab2 — shows traffic (HOST, PROXY, RULE), not rule IDs.",

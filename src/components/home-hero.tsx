@@ -82,6 +82,8 @@ export function HomeHero({ isRegistered = false }: HomeHeroProps) {
               </div>
               <pre className="bg-[#0d1117] p-6 font-mono text-[13px] leading-relaxed text-[#e6edf3]">
                 <code>{`$ brew install docker/tap/sbx
+$ brew upgrade docker/tap/sbx
+$ sbx version
 $ sbx login
 $ cd ~/my-project
 $ sbx run cursor .
