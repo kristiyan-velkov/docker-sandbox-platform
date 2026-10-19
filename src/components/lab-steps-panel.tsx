@@ -75,11 +75,9 @@ export function LabStepsPanel({
   const [now, setNow] = useState(() => Date.now());
   const [openedAt, setOpenedAt] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (sectionOpen && openedAt === null) {
-      setOpenedAt(Date.now());
-    }
-  }, [sectionOpen, openedAt]);
+  if (sectionOpen && openedAt === null) {
+    setOpenedAt(now);
+  }
 
   const unlockAnchor = showTracker ? startedAt : openedAt ? new Date(openedAt).toISOString() : null;
   const remaining =
